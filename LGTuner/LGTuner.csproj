@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Dependencies.props" />
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>LGTuner</RootNamespace>
+    <AssemblyName>LGTuner</AssemblyName>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <!--
+      Due to the nature of coding with IL2CPP, unsafe blocks will be allowed by default.
+    -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>x64</Platforms>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BuilderInfo.cs" />
+    <Compile Include="Configs\LayoutConfig.cs" />
+    <Compile Include="Configs\TileOverrideData.cs" />
+    <Compile Include="Configs\ZoneOverrideData.cs" />
+    <Compile Include="EntryPoint.cs" />
+    <Compile Include="Extensions\LGExtensions.cs" />
+    <Compile Include="Extensions\RandomExtensions.cs" />
+    <Compile Include="Inject\Inject_BuildPlug.cs" />
+    <Compile Include="Inject\Inject_BuildGeomorph.cs" />
+    <Compile Include="Inject\Inject_LoadComplexShard.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="LG_PlugInfo.cs" />
+    <Compile Include="Manager\ConfigManager.cs" />
+    <Compile Include="Utils\JSON.cs" />
+    <Compile Include="Utils\MTFOPartialDataUtil.cs" />
+    <Compile Include="Utils\MTFOUtil.cs" />
+    <None Include="Dependencies.props" />
+    <None Include="GameFolder.props" />
+  </ItemGroup>
+</Project>
