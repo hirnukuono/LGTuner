@@ -60,16 +60,9 @@ namespace LGTuner
             }
             else
             {
-                if (HasPlug(newDirection))
-                {
-                    rotation = GetRotationOfDirection(newDirection);
-                    return true;
-                }
-                else
-                {
-                    rotation = Quaternion.identity;
-                    return false;
-                }
+                Logger.Info($"You are rotating {Count} side Geomorph, this could lead to level gen crash!");
+                rotation = GetRotationOfDirection(newDirection);
+                return true;
             }
         }
 
