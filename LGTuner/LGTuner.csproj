@@ -4,7 +4,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>LGTuner</RootNamespace>
     <AssemblyName>LGTuner</AssemblyName>
-    <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>preview</LangVersion>
     <!--
       Due to the nature of coding with IL2CPP, unsafe blocks will be allowed by default.

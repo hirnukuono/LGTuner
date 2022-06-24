@@ -27,7 +27,6 @@ namespace LGTuner.Inject
         private static LayoutConfig _configContext = null;
         private static RotateType _nextRotateType;
 
-        //REPLACE TILE, POPULATE SETTINGS
         [HarmonyPrefix]
         [HarmonyWrapSafe]
         [HarmonyPatch(nameof(LG_LevelBuilder.PlaceRoot))]
@@ -39,13 +38,11 @@ namespace LGTuner.Inject
             forceAlignToVector = alignVector != Vector3.zero; //forceAlignToVector is broken, It's needed to doing this
 
             var gridSize = zone.Dimension.GetGridSize();
-            var gridPos = tile.m_shape.m_gridPosition.GetNormal(gridSize);
-            Logger.Info($"tile info: {gridPos.x} {gridPos.z} {tilePrefab.name} for {zone.LocalIndex} : {zone.DimensionIndex}");
+            var normalPos = tile.ToNormalGrid(gridSize);
+            Logger.Info($"tile info: {normalPos.x} {normalPos.z} {tilePrefab.name} for {zone.LocalIndex} : {zone.DimensionIndex}");
 
             if (!BuilderInfo.TryGetConfig(zone, out _configContext))
                 return;
-
-            var normalPos = tile.m_shape.m_gridPosition.GetNormal(gridSize);
 
             if (!_configContext.TryGetTileData(normalPos, out var overrideData))
             {
@@ -71,7 +68,6 @@ namespace LGTuner.Inject
             }
         }
 
-        //ADJUST ALTITUDE
         [HarmonyPostfix]
         [HarmonyWrapSafe]
         [HarmonyPatch(nameof(LG_LevelBuilder.GetTilePosition))]
@@ -84,7 +80,7 @@ namespace LGTuner.Inject
                 return;
 
             var gridSize = _configContext.GridSize;
-            var normalGrid = tile.m_shape.m_gridPosition.GetNormal(gridSize);
+            var normalGrid = tile.ToNormalGrid(gridSize);
             if (!_configContext.TryGetTileData(normalGrid, out var overrideData))
                 return;
 
@@ -96,26 +92,54 @@ namespace LGTuner.Inject
             }
         }
 
-        //ROTATE TILE
         [HarmonyPostfix]
         [HarmonyWrapSafe]
         [HarmonyPatch(nameof(LG_LevelBuilder.PlaceRoot))]
-        private static void Post_PlaceRoot(LG_Zone zone, LG_Geomorph __result)
+        private static void Post_PlaceRoot(LG_Tile tile, LG_Zone zone, LG_Geomorph __result)
         {
-            if (_nextRotateType == RotateType.None)
+            if (_configContext == null)
                 return;
 
-            var tileObject = __result.gameObject;
-            var plugInfo = LG_PlugInfo.BuildPlugInfo(tileObject, tileObject.transform.rotation);
-
-            Logger.Info($" - TRYING ROTATION! PLUG COUNT: {plugInfo.Count}");
-            if (plugInfo.TryGetNewRotation(zone.m_subSeed, _nextRotateType, out var rotation))
+            if (_nextRotateType != RotateType.None)
             {
-                Logger.Info($" - Done!");
-                tileObject.transform.rotation = rotation;
+                var tileObject = __result.gameObject;
+                var plugInfo = LG_PlugInfo.BuildPlugInfo(tileObject, tileObject.transform.rotation);
+
+                Logger.Info($" - TRYING ROTATION! PLUG COUNT: {plugInfo.Count}");
+                if (plugInfo.TryGetNewRotation(zone.m_subSeed, _nextRotateType, out var rotation))
+                {
+                    Logger.Info($" - Done!");
+                    tileObject.transform.rotation = rotation;
+                }
+
+                __result.SetPlaced();
             }
 
-            __result.SetPlaced();
+            var gridSize = _configContext.GridSize;
+            var normalGrid = tile.ToNormalGrid(gridSize);
+            if (!_configContext.TryGetTileData(normalGrid, out var overrideData))
+                return;
+
+            if (overrideData.OverrideAreaSeeds)
+            {
+                if (overrideData.AreaSeeds.Length == __result.m_areas.Length)
+                {
+                    var length = __result.m_areas.Length;
+                    for (int i = 0; i<length; i++)
+                    {
+                        var newSeed = overrideData.AreaSeeds[i];
+                        if (newSeed != 0)
+                        {
+                            __result.m_areas[i].AreaSeed = newSeed;
+                            Logger.Info($" - new area seed: {__result.m_areas[i].m_navInfo}, {newSeed}");
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.Error($" - Area count and AreaSeeds item count mismatched! (CFG: {overrideData.AreaSeeds.Length} != AREA: {__result.m_areas.Length}) Area seed will not be applied!");
+                }
+            }
         }
     }
 }

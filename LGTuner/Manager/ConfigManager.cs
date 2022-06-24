@@ -1,4 +1,6 @@
 ﻿using GameData;
+using GTFO.API.Utilities;
+using LevelGeneration;
 using LGTuner.Configs;
 using LGTuner.Utils;
 using System;
@@ -46,6 +48,8 @@ namespace LGTuner.Manager
                 }
             }
 
+            //LG_Factory.add_OnFactoryBuildDone(new Action(DumpLevel));
+
             var watcher = new FileSystemWatcher
             {
                 Path = configPath,
@@ -57,26 +61,45 @@ namespace LGTuner.Manager
             watcher.EnableRaisingEvents = true;
         }
 
+        private static void DumpLevel()
+        {
+            
+        }
+
+        private static void DumpLayerToConfig()
+        {
+
+        }
+
         private static void OnConfigFileEdited_ReloadConfig(object sender, FileSystemEventArgs e)
         {
-            var key = Path.GetFileName(e.Name).ToLowerInvariant();
-            Logger.Error($"File Edited: '{key}' '{e.Name}'");
-            if (_fileNameLookup.TryGetValue(key, out var data))
+            ThreadDispatcher.Dispatch(() => 
             {
-                var oldID = data.LevelLayoutID;
-                
-                _fileNameLookup.Remove(key);
-                _lookup.Remove(oldID);
-                _layouts.Remove(data);
+                var key = Path.GetFileName(e.Name).ToLowerInvariant();
+                Logger.Error($"File Edited: '{key}' '{e.Name}'");
 
-                var json = File.ReadAllText(e.Name);
-                var newData = JSON.Deserialize<LayoutConfig>(json);
-                newData.LevelLayoutID = oldID;
+                try
+                {
+                    var data = _fileNameLookup[key];
+                    var oldID = data.LevelLayoutID;
 
-                _layouts.Add(newData);
-                _lookup.Add(oldID, newData);
-                _fileNameLookup.Add(key, newData);
-            }
+                    var json = File.ReadAllText(e.Name);
+                    var newData = JSON.Deserialize<LayoutConfig>(json);
+                    newData.LevelLayoutID = oldID;
+
+                    _fileNameLookup.Remove(key);
+                    _lookup.Remove(oldID);
+                    _layouts.Remove(data);
+
+                    _layouts.Add(newData);
+                    _lookup.Add(oldID, newData);
+                    _fileNameLookup.Add(key, newData);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Error while reading LGTuner Config: {ex}");
+                }
+            });
         }
 
         public static bool TryGetConfig(uint layoutID, out LayoutConfig config)

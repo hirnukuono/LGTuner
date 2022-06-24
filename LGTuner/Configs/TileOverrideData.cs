@@ -9,6 +9,8 @@ namespace LGTuner.Configs
     {
         public int X { get; set; }
         public int Z { get; set; }
+        public bool OverrideAreaSeeds { get; set; } = false;
+        public uint[] AreaSeeds { get; set; } = Array.Empty<uint>();
         public RotateType Rotation { get; set; } = RotateType.None;
         public string Geomorph { get; set; } = string.Empty;
         public bool OverrideAltitude { get; set; } = false;

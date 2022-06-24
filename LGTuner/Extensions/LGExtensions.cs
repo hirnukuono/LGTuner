@@ -14,7 +14,12 @@ namespace LGTuner
             return (position.x == other.x) && (position.z == other.z);
         }
 
-        public static LG_GridPosition GetNormal(this LG_GridPosition position, int gridSize = -1)
+        public static LG_GridPosition ToNormalGrid(this LG_Tile tile, int gridSize)
+        {
+            return tile.m_shape.m_gridPosition.GetNormal(gridSize);
+        }
+
+        public static LG_GridPosition GetNormal(this LG_GridPosition position, int gridSize)
         {
             if (gridSize < 0)
             {
@@ -36,7 +41,7 @@ namespace LGTuner
             }
         }
 
-        public static Vector3 GetPositionNormal(this LG_Grid grid, int x, int z, int gridSize = -1)
+        public static Vector3 GetPositionNormal(this LG_Grid grid, int x, int z, int gridSize)
         {
             if (gridSize < 0)
             {

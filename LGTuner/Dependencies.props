@@ -1,41 +1,42 @@
 ﻿<Project InitialTargets="ValidateGamePath">
-  <Import Project="$(MSBuildThisFileDirectory)\GameFolder.props" Condition="Exists('$(MSBuildThisFileDirectory)\GameFolder.props')" />
-  
-  <Target Name="ValidateGamePath">
-    <Error Text="The GameFolder property must be set to the GTFO game folder." Condition="'$(GameFolder)' == '' or !Exists('$(GameFolder)')" />
-  </Target>
+	<Import Project="$(MSBuildThisFileDirectory)\GameFolder.props" Condition="Exists('$(MSBuildThisFileDirectory)\GameFolder.props')" />
 
-  <PropertyGroup>
-    <BIELibsFolder>$(GameFolder)\BepInEx\core</BIELibsFolder>
-    <MonoLibsFolder>$(GameFolder)\mono\Managed</MonoLibsFolder>
-    <UnhollowedLibsFolder>$(GameFolder)\BepInEx\unhollowed</UnhollowedLibsFolder>
-    <PluginsFolder>$(GameFolder)\BepInEx\plugins</PluginsFolder>
-  </PropertyGroup>
+	<Target Name="ValidateGamePath">
+		<Error Text="The GameFolder property must be set to the GTFO game folder." Condition="'$(GameFolder)' == '' or !Exists('$(GameFolder)')" />
+	</Target>
 
-  <!-- BepInEx libs -->
-  <ItemGroup>
-    <Reference Include="$(BIELibsFolder)\BepInEx.*.dll" Private="false" />
-    <Reference Include="$(BIELibsFolder)\0Harmony.dll" Private="false" />
-    <Reference Include="$(BIELibsFolder)\UnhollowerBaseLib.dll" Private="false" />
-    <Reference Include="$(BIELibsFolder)\UnhollowerRuntimeLib.dll" Private="false" />
-  </ItemGroup>
+	<PropertyGroup>
+		<BIELibsFolder>$(GameFolder)\BepInEx\core</BIELibsFolder>
+		<CorLibsFolder>$(GameFolder)\dotnet\corlib</CorLibsFolder>
+		<InteropLibsFolder>$(GameFolder)\BepInEx\interop</InteropLibsFolder>
+		<TargetFramework>net6.0</TargetFramework>
+		<PluginsFolder>$(GameFolder)\BepInEx\plugins</PluginsFolder>
+		<Platforms>x64</Platforms>
+	</PropertyGroup>
 
-  <!-- Mono libs -->
-  <ItemGroup>
-    <Reference Include="$(MonoLibsFolder)\Microsoft.Bcl.AsyncInterfaces.dll" Private="false" />
-    <Reference Include="$(MonoLibsFolder)\System.Text.Json.dll" Private="false" />
-    <Reference Include="$(MonoLibsFolder)\System.Runtime.CompilerServices.Unsafe.dll" Private="false" />
-  </ItemGroup>
+	<!-- BepInEx libs -->
+	<ItemGroup>
+		<Reference Include="$(BIELibsFolder)\BepInEx.*.dll" Private="false" />
+		<Reference Include="$(BIELibsFolder)\0Harmony.dll" Private="false" />
+		<Reference Include="$(BIELibsFolder)\MonoMod.RuntimeDetour.dll" Private="false" />
+		<Reference Include="$(BIELibsFolder)\Il2CppInterop.*.dll" Private="false" />
+	</ItemGroup>
 
-  <!-- Unhollowed assemblies -->
-  <ItemGroup>
-    <Reference Include="$(UnhollowedLibsFolder)/*.dll" Private="false" />
-    <Reference Remove="$(UnhollowedLibsFolder)/netstandard.dll" />
-    <Reference Remove="$(UnhollowedLibsFolder)/Newtonsoft.Json.dll" />
-  </ItemGroup>
+	<!-- CorLibs -->
+	<ItemGroup>
+		<Reference Include="$(CorLibsFolder)\*.dll" Private="false" />
+		<Reference Include="$(CorLibsFolder)\..\System.Private.CoreLib.dll" Private="false" />
+	</ItemGroup>
 
-  <!--GTFO API-->
-  <ItemGroup>
-    <Reference Include="$(PluginsFolder)/GTFO-API.dll" Private="false" />
-  </ItemGroup>
+	<!-- Interop -->
+	<ItemGroup>
+		<Reference Include="$(InteropLibsFolder)/*.dll" Private="false" />
+		<Reference Remove="$(InteropLibsFolder)/netstandard.dll" />
+		<Reference Remove="$(InteropLibsFolder)/Newtonsoft.Json.dll" />
+	</ItemGroup>
+
+	<!-- Other Dependencies -->
+	<ItemGroup>
+		<Reference Include="$(PluginsFolder)/GTFO-API.dll" Private="false" />
+	</ItemGroup>
 </Project>
