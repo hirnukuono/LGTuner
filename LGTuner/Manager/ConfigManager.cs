@@ -50,15 +50,37 @@ namespace LGTuner.Manager
 
             //LG_Factory.add_OnFactoryBuildDone(new Action(DumpLevel));
 
-            var watcher = new FileSystemWatcher
+            var liveEdit = LiveEdit.CreateListener(configPath, "*.*", true);
+            liveEdit.FileChanged += LiveEdit_FileChanged;
+            liveEdit.StartListen();
+        }
+
+        private static void LiveEdit_FileChanged(LiveEditEventArgs e)
+        {
+            var key = Path.GetFileName(e.FullPath).ToLowerInvariant();
+            Logger.Error($"File Edited: '{key}' '{e.FullPath}'");
+
+            try
             {
-                Path = configPath,
-                IncludeSubdirectories = false,
-                NotifyFilter = NotifyFilters.LastWrite,
-                Filter = "*.*"
-            };
-            watcher.Changed += new FileSystemEventHandler(OnConfigFileEdited_ReloadConfig);
-            watcher.EnableRaisingEvents = true;
+                var data = _fileNameLookup[key];
+                var oldID = data.LevelLayoutID;
+
+                var json = File.ReadAllText(e.FullPath);
+                var newData = JSON.Deserialize<LayoutConfig>(json);
+                newData.LevelLayoutID = oldID;
+
+                _fileNameLookup.Remove(key);
+                _lookup.Remove(oldID);
+                _layouts.Remove(data);
+
+                _layouts.Add(newData);
+                _lookup.Add(oldID, newData);
+                _fileNameLookup.Add(key, newData);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Error while reading LGTuner Config: {ex}");
+            }
         }
 
         private static void DumpLevel()
@@ -69,37 +91,6 @@ namespace LGTuner.Manager
         private static void DumpLayerToConfig()
         {
 
-        }
-
-        private static void OnConfigFileEdited_ReloadConfig(object sender, FileSystemEventArgs e)
-        {
-            ThreadDispatcher.Dispatch(() => 
-            {
-                var key = Path.GetFileName(e.Name).ToLowerInvariant();
-                Logger.Error($"File Edited: '{key}' '{e.Name}'");
-
-                try
-                {
-                    var data = _fileNameLookup[key];
-                    var oldID = data.LevelLayoutID;
-
-                    var json = File.ReadAllText(e.Name);
-                    var newData = JSON.Deserialize<LayoutConfig>(json);
-                    newData.LevelLayoutID = oldID;
-
-                    _fileNameLookup.Remove(key);
-                    _lookup.Remove(oldID);
-                    _layouts.Remove(data);
-
-                    _layouts.Add(newData);
-                    _lookup.Add(oldID, newData);
-                    _fileNameLookup.Add(key, newData);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error($"Error while reading LGTuner Config: {ex}");
-                }
-            });
         }
 
         public static bool TryGetConfig(uint layoutID, out LayoutConfig config)
