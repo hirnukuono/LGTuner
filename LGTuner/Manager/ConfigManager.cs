@@ -65,17 +65,27 @@ namespace LGTuner.Manager
                 var data = _fileNameLookup[key];
                 var oldID = data.LevelLayoutID;
 
-                var json = File.ReadAllText(e.FullPath);
-                var newData = JSON.Deserialize<LayoutConfig>(json);
-                newData.LevelLayoutID = oldID;
+                LiveEdit.TryReadFileContent(e.FullPath, (content) =>
+                {
+                    try
+                    {
+                        var json = File.ReadAllText(e.FullPath);
+                        var newData = JSON.Deserialize<LayoutConfig>(json);
+                        newData.LevelLayoutID = oldID;
 
-                _fileNameLookup.Remove(key);
-                _lookup.Remove(oldID);
-                _layouts.Remove(data);
+                        _fileNameLookup.Remove(key);
+                        _lookup.Remove(oldID);
+                        _layouts.Remove(data);
 
-                _layouts.Add(newData);
-                _lookup.Add(oldID, newData);
-                _fileNameLookup.Add(key, newData);
+                        _layouts.Add(newData);
+                        _lookup.Add(oldID, newData);
+                        _fileNameLookup.Add(key, newData);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Error while reading LGTuner Config: {ex}");
+                    }
+                });
             }
             catch (Exception ex)
             {
