@@ -58,38 +58,42 @@ namespace LGTuner.Manager
         private static void LiveEdit_FileChanged(LiveEditEventArgs e)
         {
             var key = Path.GetFileName(e.FullPath).ToLowerInvariant();
-            Logger.Error($"File Edited: '{key}' '{e.FullPath}'");
-
-            try
+            var extension = Path.GetExtension(e.FullPath);
+            if (extension.Equals(".json", StringComparison.InvariantCulture) ||
+                extension.Equals(".jsonc", StringComparison.InvariantCulture))
             {
-                var data = _fileNameLookup[key];
-                var oldID = data.LevelLayoutID;
+                Logger.Error($"File Edited: '{key}' '{e.FullPath}'");
 
-                LiveEdit.TryReadFileContent(e.FullPath, (content) =>
+                try
                 {
-                    try
-                    {
-                        var json = File.ReadAllText(e.FullPath);
-                        var newData = JSON.Deserialize<LayoutConfig>(json);
-                        newData.LevelLayoutID = oldID;
+                    var data = _fileNameLookup[key];
+                    var oldID = data.LevelLayoutID;
 
-                        _fileNameLookup.Remove(key);
-                        _lookup.Remove(oldID);
-                        _layouts.Remove(data);
-
-                        _layouts.Add(newData);
-                        _lookup.Add(oldID, newData);
-                        _fileNameLookup.Add(key, newData);
-                    }
-                    catch (Exception ex)
+                    LiveEdit.TryReadFileContent(e.FullPath, (json) =>
                     {
-                        Logger.Error($"Error while reading LGTuner Config: {ex}");
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"Error while reading LGTuner Config: {ex}");
+                        try
+                        {
+                            var newData = JSON.Deserialize<LayoutConfig>(json);
+                            newData.LevelLayoutID = oldID;
+
+                            _fileNameLookup.Remove(key);
+                            _lookup.Remove(oldID);
+                            _layouts.Remove(data);
+
+                            _layouts.Add(newData);
+                            _lookup.Add(oldID, newData);
+                            _fileNameLookup.Add(key, newData);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error($"Error while reading LGTuner Config: {ex}");
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Error while reading LGTuner Config: {ex}");
+                }
             }
         }
 
