@@ -1,10 +1,8 @@
 ﻿using Expedition;
+using GameData;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using Random = System.Random;
 
@@ -131,10 +129,93 @@ namespace LGTuner.Inject
             return prefab != null;
         }
 
+
+
         private static int GetDropHeight(LG_Plug plug)
         {
             var plugDistance = Mathf.Abs(plug.transform.position.y - plug.m_pariedWith.transform.position.y);
             return Mathf.RoundToInt(plugDistance / BuilderInfo.AltitudeOffset);
         }
+    }
+
+    [HarmonyPatch(typeof(LG_BuildPlugJob), nameof(LG_BuildPlugJob.Build))]
+    class Inject_BuildPlugJob
+    {
+        [HarmonyWrapSafe]
+        private static bool Prefix(LG_BuildPlugJob __instance)
+        {
+            GameObject prefab = null;
+            var plug = __instance.m_plug;
+            Logger.Info($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
+            // fdfix if (plug.m_pariedWith != null) return true;
+            if (plug.ExpanderStatus == LG_ZoneExpanderStatus.Connected) return true;
+            if (plug.m_isZoneSource) return true;
+            if (!BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))
+                return true;
+
+            var normalGrid = plug.m_linksFrom.m_geomorph.m_tile.m_shape.m_gridPosition.GetNormal(config.GridSize);
+            if (!config.TryGetTileData(normalGrid, out var overrideData))
+                return true;
+
+            switch (plug.m_dir)
+            {
+                case LG_PlugDir.Up:
+                    if (TryGetPlugPrefab(overrideData.BackwardPlug, out var newPrefab))
+                    {
+                        Logger.Info($" - Prefab Replaced by BackwardPlug setting! {newPrefab.name}");
+                        prefab = newPrefab;
+                    }
+                    break;
+
+                case LG_PlugDir.Down:
+                    if (TryGetPlugPrefab(overrideData.ForwardPlug, out newPrefab))
+                    {
+                        Logger.Info($" - Prefab Replaced by ForwardPlug setting! {newPrefab.name}");
+                        prefab = newPrefab;
+                    }
+                    break;
+
+                case LG_PlugDir.Left:
+                    if (TryGetPlugPrefab(overrideData.LeftPlug, out newPrefab))
+                    {
+                        Logger.Info($" - Prefab Replaced by LeftPlug setting! {newPrefab.name}");
+                        prefab = newPrefab;
+                    }
+                    break;
+
+                case LG_PlugDir.Right:
+                    if (TryGetPlugPrefab(overrideData.RightPlug, out newPrefab))
+                    {
+                        Logger.Info($" - Prefab Replaced by RightPlug setting! {newPrefab.name}");
+                        prefab = newPrefab;
+                    }
+                    break;
+            }
+            if (prefab != null)
+            {
+                Logger.Info($"we shall replace a cap going {plug.m_dir}");
+                var position = plug.transform.position;
+                var rotation = plug.transform.rotation;
+                GameObject gameObject = Object.Instantiate(prefab, position, rotation);
+                gameObject.transform.SetParent(plug.transform, worldPositionStays: true);
+                LG_Factory.FindAndBuildSelectorsAndSpawners(gameObject, __instance.m_rnd.Random.NextSubSeed());
+                __instance.ProcessDivider(plug, gameObject, plugIsFlipped: false, __instance.m_rnd.Random.NextSubSeed());
+                plug.m_wasProcessed = true;
+            }
+            return true;
+
+        }
+        private static bool TryGetPlugPrefab(string prefabPath, out GameObject prefab)
+        {
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                prefab = null;
+                return false;
+            }
+
+            prefab = AssetAPI.GetLoadedAsset(prefabPath).Cast<GameObject>();
+            return prefab != null;
+        }
+
     }
 }

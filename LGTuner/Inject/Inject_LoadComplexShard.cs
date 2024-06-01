@@ -14,7 +14,6 @@ namespace LGTuner.Inject
     {
         private static int _waitingShared = 0;
 
-        [HarmonyWrapSafe]
         private static void Prefix(LG_LoadComplexDataSetResourcesJob __instance)
         {
             if (__instance.m_loadingStarted)

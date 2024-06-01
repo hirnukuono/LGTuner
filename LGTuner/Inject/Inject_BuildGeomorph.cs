@@ -43,7 +43,7 @@ namespace LGTuner.Inject
 
             if (!BuilderInfo.TryGetConfig(zone, out _configContext))
                 return;
-
+            
             if (!_configContext.TryGetTileData(normalPos, out var overrideData))
             {
                 overrideData = _configContext.PopulateTileOverrideForZone(zone, normalPos);
@@ -125,7 +125,7 @@ namespace LGTuner.Inject
                 if (overrideData.AreaSeeds.Length == __result.m_areas.Length)
                 {
                     var length = __result.m_areas.Length;
-                    for (int i = 0; i<length; i++)
+                    for (int i = 0; i < length; i++)
                     {
                         var newSeed = overrideData.AreaSeeds[i];
                         if (newSeed != 0)

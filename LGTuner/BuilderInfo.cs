@@ -1,5 +1,6 @@
 ﻿using Expedition;
 using GameData;
+using GTFO.API.JSON;
 using LevelGeneration;
 using LGTuner.Configs;
 using LGTuner.Manager;
@@ -20,7 +21,7 @@ namespace LGTuner
         public static int GridCenter { get; private set; }
         public static int GridZeroOffset { get; private set; }
         public static float AltitudeOffset { get; private set; }
-        
+
 
         public static LayoutConfig MainLayer { get; private set; }
         public static LayoutConfig SecondaryLayer { get; private set; }
@@ -60,6 +61,7 @@ namespace LGTuner
                 var layout = LevelLayoutDataBlock.GetBlock(dim.DimensionData.LevelLayoutData);
                 if (layout != null && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
                 {
+                    Logger.Info("loysimme dimension ja levellayoutin");
                     dimLayer.Reset(dim.Grid.m_sizeX);
                     DimensionLayer[(int)dim.DimensionIndex] = dimLayer;
                 }
@@ -91,6 +93,7 @@ namespace LGTuner
         {
             if (!Dimension.GetDimension(zone.DimensionIndex, out var dimension))
             {
+                Logger.Info("dimension getter failed");
                 config = null;
                 return false;
             }
@@ -114,6 +117,19 @@ namespace LGTuner
             }
             else if (!dimension.DimensionData.IsStaticDimension)
             {
+                foreach (var dim in Builder.CurrentFloor.m_dimensions)
+                {
+                    if (dim.IsMainDimension || dim.DimensionData.IsStaticDimension)
+                        continue;
+
+                    var layout = LevelLayoutDataBlock.GetBlock(dim.DimensionData.LevelLayoutData);
+                    if (layout != null && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
+                    {
+                        Logger.Info("found a dimension + levellayout");
+                        dimLayer.Reset(dim.Grid.m_sizeX);
+                        DimensionLayer[(int)dim.DimensionIndex] = dimLayer;
+                    }
+                }
                 config = DimensionLayer[(int)zone.DimensionIndex];
                 return config != null;
             }
@@ -125,7 +141,6 @@ namespace LGTuner
         public static GameObject GetRandomPlug(uint seed, int plugHeight, SubComplex subcomplex, bool withGate)
         {
             var res = ComplexResourceSet;
-
             return plugHeight switch
             {
                 0 => res.GetRandomPrefab(seed, withGate ? res.m_straightPlugsWithGates : res.m_straightPlugsNoGates, subcomplex),
