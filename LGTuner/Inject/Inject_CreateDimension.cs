@@ -26,7 +26,7 @@ namespace LGTuner.Inject
             var layout = LevelLayoutDataBlock.GetBlock(dimensionData.LevelLayoutData);
             ConfigManager.TryGetConfig(layout.persistentID, out dimLayer);
             if (dimLayer == null) return true;
-
+            if (dimLayer.TileOverrides.Length == 0) return true;
             gridSize = 10;
             cellSize = 64f;
             LG_Zone zone = null;
