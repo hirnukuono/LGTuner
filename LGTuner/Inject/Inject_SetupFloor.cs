@@ -38,10 +38,8 @@ namespace LGTuner.Inject
             if (MainLayer == null) return true;
 
             LG_GridPosition normalPos = new() { x = 0, z = 0 };
-            if (MainLayer != null)
-            {
-                if (MainLayer.TileOverrides[0].X != 0 || MainLayer.TileOverrides[0].Z != 0) return true;
-            }
+            if (MainLayer.TileOverrides.Length == 0) return true;
+            if (MainLayer.TileOverrides[0].X != 0 || MainLayer.TileOverrides[0].Z != 0) return true;
 
             if (!string.IsNullOrEmpty(MainLayer.TileOverrides[0].Geomorph))
             {
