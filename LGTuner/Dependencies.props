@@ -16,7 +16,7 @@
 
 
 	<PropertyGroup>
-		<Profile>hirnuplugins</Profile>
+		<Profile>hirnugeos</Profile>
 		<BIELibsFolder>$(AppData)\r2modmanPlus-local\GTFO\profiles\$(Profile)\BepInEx\core</BIELibsFolder>
 		<CorLibsFolder>$(GameFolder)\dotnet\corlib</CorLibsFolder>
 		<InteropLibsFolder>$(AppData)\r2modmanPlus-local\GTFO\profiles\$(Profile)\BepInEx\interop</InteropLibsFolder>
