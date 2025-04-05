@@ -1,4 +1,5 @@
 ﻿using AIGraph;
+using Expedition;
 using GameData;
 using GTFO.API;
 using HarmonyLib;
@@ -7,7 +8,6 @@ using LevelGeneration.Core;
 using LGTuner.Configs;
 using LGTuner.Manager;
 using LogUtils;
-using SNetwork;
 using UnityEngine;
 using XXHashing;
 
@@ -21,6 +21,7 @@ namespace LGTuner.Inject
         [HarmonyPrefix]
         private static bool Prefix(LG_Floor __instance, uint seed, eDimensionIndex dimensionIndex, bool arenaDimension, DimensionData dimensionData, Vector3 position, ref int __result, int gridSize = 10, float cellSize = 64f)
         {
+            SubComplex subcomplex = Builder.LayerBuildDatas[0].m_zoneBuildDatas[0].SubComplex;
             if (dimensionData.IsStaticDimension) return true;
             LayoutConfig dimLayer = null;
             var layout = LevelLayoutDataBlock.GetBlock(dimensionData.LevelLayoutData);
@@ -29,7 +30,6 @@ namespace LGTuner.Inject
             if (dimLayer.TileOverrides.Length == 0) return true;
             gridSize = 10;
             cellSize = 64f;
-            LG_Zone zone = null;
             GameObject customGeomorph = null;
             XXHashSequence xXHashSequence = new XXHashSequence(seed);
             Vector3 gridPosition = position - new Vector3(cellSize, 0f, cellSize) * gridSize * 0.5f;
@@ -45,7 +45,7 @@ namespace LGTuner.Inject
             if (layout != null)
             {
                 if (dimLayer.TileOverrides[0].X == 0 && dimLayer.TileOverrides[0].Z == 0 && !string.IsNullOrEmpty(dimLayer.TileOverrides[0].Geomorph))
-                    {
+                {
                     customGeomorph = AssetAPI.GetLoadedAsset(dimLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>();
                     Logger.Info($" - dim {dimensionIndex} elevator overriden! {customGeomorph.name}");
                 }

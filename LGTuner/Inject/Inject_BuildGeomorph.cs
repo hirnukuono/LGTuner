@@ -1,15 +1,8 @@
-﻿using Expedition;
-using GTFO.API;
+﻿using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using LGTuner.Configs;
-using LGTuner.Manager;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
-using XXHashing;
-using static LGTuner.Configs.ZoneOverrideData;
 
 namespace LGTuner.Inject
 {
@@ -43,7 +36,7 @@ namespace LGTuner.Inject
 
             if (!BuilderInfo.TryGetConfig(zone, out _configContext))
                 return;
-            
+
             if (!_configContext.TryGetTileData(normalPos, out var overrideData))
             {
                 overrideData = _configContext.PopulateTileOverrideForZone(zone, normalPos);
@@ -54,6 +47,7 @@ namespace LGTuner.Inject
 
             if (!string.IsNullOrEmpty(overrideData.Geomorph))
             {
+                if (overrideData.X == 0 && overrideData.Z == 0) return;
                 var tempPrefab = AssetAPI.GetLoadedAsset(overrideData.Geomorph)?.Cast<GameObject>();
                 if (tempPrefab != null)
                 {

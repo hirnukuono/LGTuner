@@ -53,6 +53,5 @@
 	<!--Other plugin dependencies -->
 	<ItemGroup>
 		<Reference Include="$(PluginsFolder)/GTFO-API.dll" Private="False"/>
-		<Reference Include="$(PluginsFolder)/dakkhuza-FloatingTextAPI\FloatingTextAPI.dll" Private="false"/>
 	</ItemGroup>	
 </Project>

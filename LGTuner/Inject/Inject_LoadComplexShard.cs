@@ -1,11 +1,14 @@
 ﻿using AssetShards;
+using BepInEx.Unity.IL2CPP;
 using Expedition;
+using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Security.Policy;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using static Il2CppSystem.Collections.Hashtable;
 
 namespace LGTuner.Inject
 {
@@ -18,6 +21,25 @@ namespace LGTuner.Inject
         {
             if (__instance.m_loadingStarted)
                 return;
+
+            // fix assets
+            if (!EntryPoint.AssetsFixed)
+            {
+                if (!IL2CPPChainloader.Instance.Plugins.TryGetValue("StairsFix", out var asdasdasdinfo))
+                {
+                    var go = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Dimensions/Desert/Dimension_Desert_Mining_Shaft.prefab");
+                    var ladders = go.GetComponentsInChildren<LG_Ladder>();
+                    ladders[2].gameObject.transform.position += new Vector3(0f, 0f, -1.5f);
+                    Logger.Info("navmesh fix on Dimension_Desert_Mining_Shaft.prefab (StairsFix) done");
+                }
+                var go2 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01.prefab");
+                foreach (var tra in go2.GetComponentsInChildren<Transform>())
+                {
+                    if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
+                }
+                EntryPoint.AssetsFixed = true;
+                Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
+            }
 
             foreach (var complex in BuilderInfo.ExtraComplexResourceToLoad)
             {

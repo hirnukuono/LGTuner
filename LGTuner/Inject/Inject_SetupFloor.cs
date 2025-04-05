@@ -1,5 +1,4 @@
 ﻿using Expedition;
-using GameData;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
@@ -19,7 +18,6 @@ namespace LGTuner.Inject
         [HarmonyPrefix]
         private static bool Prefix(LG_SetupFloor __instance, ref bool __result)
         {
-            LG_Zone zone = null;
             LayoutConfig MainLayer = null;
             Debug.Log(Deb.LG("LG_SetupFloor.Build"));
             GameObject gameObject = null;
@@ -44,15 +42,12 @@ namespace LGTuner.Inject
             if (!string.IsNullOrEmpty(MainLayer.TileOverrides[0].Geomorph))
             {
                 gameObject = AssetAPI.GetLoadedAsset(MainLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>();
-
                 if (gameObject == null)
                 {
                     Logger.Info("LGTuner failed to override elevator!");
                     return true;
                 }
-
                 Logger.Info($" - elevator overriden! {gameObject.name}");
-
                 LG_FloorTransition lG_FloorTransition = GOUtil.SpawnChildAndGetComp<LG_FloorTransition>(gameObject, __instance.m_position, __instance.m_rotation);
                 lG_FloorTransition.m_geoPrefab = gameObject;
                 lG_FloorTransition.SetupAreas(xXHashSequence.NextSubSeed());

@@ -1,5 +1,4 @@
 ﻿using Expedition;
-using GameData;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
@@ -196,14 +195,13 @@ namespace LGTuner.Inject
                 Logger.Info($"we shall replace a cap going {plug.m_dir}");
                 var position = plug.transform.position;
                 var rotation = plug.transform.rotation;
-                GameObject gameObject = Object.Instantiate(prefab, position, rotation);
+                GameObject gameObject = UnityEngine.Object.Instantiate(prefab, position, rotation);
                 gameObject.transform.SetParent(plug.transform, worldPositionStays: true);
                 LG_Factory.FindAndBuildSelectorsAndSpawners(gameObject, __instance.m_rnd.Random.NextSubSeed());
                 __instance.ProcessDivider(plug, gameObject, plugIsFlipped: false, __instance.m_rnd.Random.NextSubSeed());
                 plug.m_wasProcessed = true;
             }
             return true;
-
         }
         private static bool TryGetPlugPrefab(string prefabPath, out GameObject prefab)
         {
