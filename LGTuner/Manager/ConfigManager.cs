@@ -1,14 +1,10 @@
 ﻿using AssetShards;
-using GameData;
 using GTFO.API.Utilities;
-using LevelGeneration;
 using LGTuner.Configs;
 using LGTuner.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace LGTuner.Manager
 {
@@ -22,6 +18,7 @@ namespace LGTuner.Manager
         public static void LoadShardForFixingAssets()
         {
             AssetShardManager.LoadShard(AssetShardManager.GetShardName(AssetBundleName.Complex_Service, AssetBundleShard.S6));
+            AssetShardManager.LoadShard(AssetShardManager.GetShardName(AssetBundleName.Complex_Tech, AssetBundleShard.S10));
         }
 
         public static void Init()

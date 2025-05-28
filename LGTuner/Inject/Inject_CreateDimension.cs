@@ -8,19 +8,130 @@ using LevelGeneration.Core;
 using LGTuner.Configs;
 using LGTuner.Manager;
 using LogUtils;
+using SNetwork;
 using UnityEngine;
 using XXHashing;
 
 namespace LGTuner.Inject
 {
-    [HarmonyPatch(typeof(LG_Floor), nameof(LG_Floor.CreateDimension))]
+    [HarmonyPatch]
     internal static class Inject_CreateDimension
     {
-        //private static LayoutConfig _configContext = null;
-
+        [HarmonyPatch(typeof(LG_Floor), nameof(LG_Floor.CreateAllDimensions))]
         [HarmonyPrefix]
-        private static bool Prefix(LG_Floor __instance, uint seed, eDimensionIndex dimensionIndex, bool arenaDimension, DimensionData dimensionData, Vector3 position, ref int __result, int gridSize = 10, float cellSize = 64f)
+
+        private static bool Dim250(LG_Floor __instance, uint seed, bool skipMainDimension = true)
         {
+            if (Builder.LevelGenExpedition.DimensionDatas == null || Builder.LevelGenExpedition.DimensionDatas.Count <= 0)
+            {
+                Dimension.CalculateAllDimensionBounds();
+                return false;
+            }
+            XXHashSequence xXHashSequence = new XXHashSequence(seed);
+            Vector3 up = Vector3.up;
+            int num = 0;
+            float num2 = 150f;
+            for (int i = 0; i < Builder.LevelGenExpedition.DimensionDatas.Count; i++)
+            {
+                DimensionInExpeditionData dimensionInExpeditionData = Builder.LevelGenExpedition.DimensionDatas[i];
+                if (dimensionInExpeditionData.DimensionIndex != eDimensionIndex.ARENA_DIMENSION && dimensionInExpeditionData.TryGetDimensionData(out var dimensionData))
+                {
+                    DimensionData dimensionData2 = dimensionData.DimensionData;
+                    if (dimensionInExpeditionData.Enabled && (!skipMainDimension || dimensionInExpeditionData.DimensionIndex != eDimensionIndex.Reality) && !__instance.m_createdDimensionSet.Contains(dimensionInExpeditionData.DimensionIndex))
+                    {
+                        num2 += dimensionData2.VerticalExtentsDown;
+                        Vector3 position = up * num2;
+                        __instance.CreateDimension(xXHashSequence.NextSubSeed(), dimensionInExpeditionData.DimensionIndex, false, dimensionData2, position, 40, 64);
+                        __instance.m_createdDimensionSet.Add(dimensionInExpeditionData.DimensionIndex);
+                        Logger.Info($"created dim {dimensionInExpeditionData.DimensionIndex} pos {position} ..");
+
+                        num2 += dimensionData2.VerticalExtentsUp + 50;
+                        num++;
+                    }
+                }
+            }
+            float num3 = 0f;
+            float num4 = 0f;
+            for (int j = 0; j < Builder.LevelGenExpedition.DimensionDatas.Count; j++)
+            {
+                DimensionInExpeditionData dimensionInExpeditionData2 = Builder.LevelGenExpedition.DimensionDatas[j];
+                if (dimensionInExpeditionData2.DimensionIndex == eDimensionIndex.ARENA_DIMENSION && dimensionInExpeditionData2.TryGetDimensionData(out var dimensionData3))
+                {
+                    if (dimensionData3.DimensionData.VerticalExtentsDown > num3)
+                    {
+                        num3 = dimensionData3.DimensionData.VerticalExtentsDown;
+                    }
+                    if (dimensionData3.DimensionData.VerticalExtentsUp > num3)
+                    {
+                        num4 = num3;
+                    }
+                }
+            }
+            int num5 = 0;
+            Vector3 right = Vector3.right;
+            for (int k = 0; k < SNet.Slots.PlayerSlots.Length; k++)
+            {
+                num2 += num3;
+                float num6 = 0f;
+                for (int l = 0; l < Builder.LevelGenExpedition.DimensionDatas.Count; l++)
+                {
+                    DimensionInExpeditionData dimensionInExpeditionData3 = Builder.LevelGenExpedition.DimensionDatas[l];
+                    if (dimensionInExpeditionData3.DimensionIndex != eDimensionIndex.ARENA_DIMENSION)
+                    {
+                        continue;
+                    }
+                    if (!dimensionInExpeditionData3.TryGetDimensionData(out var dimensionData4))
+                    {
+                        Debug.LogError("Could not find datablock for arena: datablockID: " + dimensionInExpeditionData3.DimensionData);
+                        continue;
+                    }
+                    eDimensionIndex fDimensionIndex = (eDimensionIndex)(21 - (num5 + 1));
+                    if (__instance.m_createdDimensionSet.Contains(fDimensionIndex))
+                    {
+                        DebugLog.LogPrefixError(__instance, $"Enemy dimension ({fDimensionIndex}) had already been created! If there are dimension enemies in the level, dimensionIndex {eDimensionIndex.Dimension_17}-{eDimensionIndex.Dimension_20} needs to be free (one for each player slot).");
+                        continue;
+                    }
+                    DimensionData dimensionData5 = dimensionData4.DimensionData;
+                    if (dimensionInExpeditionData3.Enabled)
+                    {
+                        GameObject customGeomorph = GameDataBlockBase<ComplexResourceSetDataBlock>.GetBlock(dimensionData5.DimensionResourceSetID).GetCustomGeomorph(dimensionData5.DimensionGeomorph);
+                        if (customGeomorph == null)
+                        {
+                            DebugLog.LogPrefixError(__instance, $"The dimension geomorph for ({dimensionData4.persistentID}) {dimensionData4.name} could not be found!");
+                            continue;
+                        }
+                        float num7 = 32f;
+                        LG_Dimension component = customGeomorph.GetComponent<LG_Dimension>();
+                        if (component != null && component.TryGetDimensionBounds(out var bounds))
+                        {
+                            num7 += bounds.extents.x;
+                        }
+                        num6 += num7;
+                        Vector3 position2 = up * num2 + right * num6;
+
+                        __instance.CreateDimension(xXHashSequence.NextSubSeed(), fDimensionIndex, false, dimensionData5, position2, 40, 64);
+                        __instance.m_createdDimensionSet.Add(fDimensionIndex);
+                        Logger.Info($"created dim {fDimensionIndex} pos {position2} ..");
+
+                        num++;
+                        num6 += num7;
+                    }
+                    num5++;
+                }
+                num2 += num4;
+            }
+            Dimension.CalculateAllDimensionBounds();
+            Logger.Info($"Found ({num}) unique dimension references in GameData for this expedition and created ({num5}) enemy dimensions.");
+
+            return false;
+        }
+
+
+        [HarmonyPatch(typeof(LG_Floor), nameof(LG_Floor.CreateDimension))]
+        [HarmonyPrefix]
+        private static bool Prefix(LG_Floor __instance, uint seed, eDimensionIndex dimensionIndex, bool arenaDimension, ref DimensionData dimensionData, Vector3 position, ref int __result, int gridSize, float cellSize = 64f)
+        {
+            gridSize = 40;
             SubComplex subcomplex = Builder.LayerBuildDatas[0].m_zoneBuildDatas[0].SubComplex;
             if (dimensionData.IsStaticDimension) return true;
             LayoutConfig dimLayer = null;
@@ -28,7 +139,7 @@ namespace LGTuner.Inject
             ConfigManager.TryGetConfig(layout.persistentID, out dimLayer);
             if (dimLayer == null) return true;
             if (dimLayer.TileOverrides.Length == 0) return true;
-            gridSize = 10;
+            Logger.Info($"in createdim prefix gridsize {gridSize} ..");
             cellSize = 64f;
             GameObject customGeomorph = null;
             XXHashSequence xXHashSequence = new XXHashSequence(seed);

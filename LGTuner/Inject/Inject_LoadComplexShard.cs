@@ -5,10 +5,8 @@ using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using System;
-using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static Il2CppSystem.Collections.Hashtable;
 
 namespace LGTuner.Inject
 {
@@ -37,8 +35,20 @@ namespace LGTuner.Inject
                 {
                     if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
                 }
-                EntryPoint.AssetsFixed = true;
                 Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
+
+                var go3 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Tech/Geomorphs/geo_64x64_tech_lab_HA_05.prefab");
+                var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
+                foreach (var c in caps)
+                    if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
+                    {
+                        var p = c.m_prefab;
+                        foreach (var g in p.GetComponentsInChildren<Transform>())
+                            if (g.name == "Capsulecollider")
+                                g.transform.localScale = new(0.5f, 1, 0.5f);
+                    }
+                Logger.Info("collider fix on geo_64x64_tech_lab_HA_05.prefab done");
+                EntryPoint.AssetsFixed = true;
             }
 
             foreach (var complex in BuilderInfo.ExtraComplexResourceToLoad)
@@ -58,7 +68,7 @@ namespace LGTuner.Inject
                 }
             }
         }
-        
+
         private static void Loaded()
         {
             _waitingShared--;

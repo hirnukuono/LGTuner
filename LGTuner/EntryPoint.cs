@@ -8,7 +8,7 @@ using System;
 
 namespace LGTuner
 {
-    [BepInPlugin("LGTuner", "LGTuner", "1.1.3")]
+    [BepInPlugin("LGTuner", "LGTuner", "1.1.5")]
     [BepInProcess("GTFO.exe")]
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
