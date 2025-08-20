@@ -124,7 +124,7 @@ namespace LGTuner.Inject
                 return false;
             }
 
-            prefab = AssetAPI.GetLoadedAsset(prefabPath).Cast<GameObject>();
+            prefab = AssetAPI.GetLoadedAsset(prefabPath)?.Cast<GameObject>();
             return prefab != null;
         }
 
