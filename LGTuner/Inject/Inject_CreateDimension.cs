@@ -22,6 +22,7 @@ namespace LGTuner.Inject
 
         private static bool Dim250(LG_Floor __instance, uint seed, bool skipMainDimension = true)
         {
+            int gridSize = 40;
             if (Builder.LevelGenExpedition.DimensionDatas == null || Builder.LevelGenExpedition.DimensionDatas.Count <= 0)
             {
                 Dimension.CalculateAllDimensionBounds();
@@ -41,11 +42,11 @@ namespace LGTuner.Inject
                     {
                         num2 += dimensionData2.VerticalExtentsDown;
                         Vector3 position = up * num2;
-                        __instance.CreateDimension(xXHashSequence.NextSubSeed(), dimensionInExpeditionData.DimensionIndex, false, dimensionData2, position, 40, 64);
+                        __instance.CreateDimension(xXHashSequence.NextSubSeed(), dimensionInExpeditionData.DimensionIndex, false, dimensionData2, position, gridSize, 64);
                         __instance.m_createdDimensionSet.Add(dimensionInExpeditionData.DimensionIndex);
                         Logger.Info($"created dim {dimensionInExpeditionData.DimensionIndex} pos {position} ..");
 
-                        num2 += dimensionData2.VerticalExtentsUp + 50;
+                        num2 += dimensionData2.VerticalExtentsUp; // removed +50, eeeediot hirnu
                         num++;
                     }
                 }
@@ -57,6 +58,7 @@ namespace LGTuner.Inject
                 DimensionInExpeditionData dimensionInExpeditionData2 = Builder.LevelGenExpedition.DimensionDatas[j];
                 if (dimensionInExpeditionData2.DimensionIndex == eDimensionIndex.ARENA_DIMENSION && dimensionInExpeditionData2.TryGetDimensionData(out var dimensionData3))
                 {
+                    gridSize = 10;
                     if (dimensionData3.DimensionData.VerticalExtentsDown > num3)
                     {
                         num3 = dimensionData3.DimensionData.VerticalExtentsDown;
@@ -109,8 +111,10 @@ namespace LGTuner.Inject
                         num6 += num7;
                         Vector3 position2 = up * num2 + right * num6;
 
-                        __instance.CreateDimension(xXHashSequence.NextSubSeed(), fDimensionIndex, false, dimensionData5, position2, 40, 64);
+                        __instance.CreateDimension(xXHashSequence.NextSubSeed(), fDimensionIndex, true, dimensionData5, position2, 10, 64);
                         __instance.m_createdDimensionSet.Add(fDimensionIndex);
+                        DimensionSlotIndex gaa = new() { DimensionDataBlockID = 14, PlayerSlotIndex = (uint)k };
+                        __instance.m_dimensionArenaMap.Add(gaa, __instance.m_dimensions[__instance.m_dimensions.Count - 1]);
                         Logger.Info($"created dim {fDimensionIndex} pos {position2} ..");
 
                         num++;
@@ -131,6 +135,7 @@ namespace LGTuner.Inject
         [HarmonyPrefix]
         private static bool Prefix(LG_Floor __instance, uint seed, eDimensionIndex dimensionIndex, bool arenaDimension, ref DimensionData dimensionData, Vector3 position, ref int __result, int gridSize, float cellSize = 64f)
         {
+            if (arenaDimension) return true;
             gridSize = 40;
             SubComplex subcomplex = Builder.LayerBuildDatas[0].m_zoneBuildDatas[0].SubComplex;
             if (dimensionData.IsStaticDimension) return true;
