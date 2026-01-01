@@ -55,6 +55,7 @@ namespace LGTuner.Manager
 
             var liveEdit = LiveEdit.CreateListener(configPath, "*.*", true);
             liveEdit.FileChanged += LiveEdit_FileChanged;
+            liveEdit.FileCreated += LiveEdit_FileChanged;
             liveEdit.StartListen();
         }
 
@@ -69,19 +70,37 @@ namespace LGTuner.Manager
 
                 try
                 {
-                    var data = _fileNameLookup[key];
-                    var oldID = data.LevelLayoutID;
+                    uint oldID = 0;
+                    bool newfile = false;
+                    LayoutConfig data = null;
+                    if (_fileNameLookup.ContainsKey(key)) data = _fileNameLookup[key];
+                    if (data == null) newfile = true;
+                    if (data != null) oldID = data.LevelLayoutID;
 
                     LiveEdit.TryReadFileContent(e.FullPath, (json) =>
                     {
                         try
                         {
                             var newData = JSON.Deserialize<LayoutConfig>(json);
-                            newData.LevelLayoutID = oldID;
+                            if (oldID > 0) newData.LevelLayoutID = oldID;
+                            if (oldID == 0) oldID = newData.LevelLayoutID;
 
-                            _fileNameLookup.Remove(key);
-                            _lookup.Remove(oldID);
-                            _layouts.Remove(data);
+                            if (newfile)
+                            {
+                                if (_fileNameLookup.ContainsKey(key)) _fileNameLookup.Remove(key);
+                                //_fileNameLookup.Add(key, newData);
+                                LayoutConfig toremove = null;
+                                foreach (var l in _layouts) if (l.LevelLayoutID == newData.LevelLayoutID) toremove = l;
+                                if (toremove != null) _layouts.Remove(toremove);
+                                if (_lookup.ContainsKey(oldID)) _lookup.Remove(oldID);
+                            }
+
+                            if (!newfile)
+                            {
+                                _fileNameLookup.Remove(key);
+                                _lookup.Remove(oldID);
+                                _layouts.Remove(data);
+                            }
 
                             _layouts.Add(newData);
                             _lookup.Add(oldID, newData);
@@ -89,7 +108,7 @@ namespace LGTuner.Manager
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error($"Error while reading LGTuner Config: {ex}");
+                            Logger.Error($"Error while reading or inserting LGTuner Config: {ex}");
                         }
                     });
                 }

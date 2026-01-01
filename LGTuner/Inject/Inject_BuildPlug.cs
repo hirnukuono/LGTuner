@@ -124,7 +124,7 @@ namespace LGTuner.Inject
                 return false;
             }
 
-            prefab = AssetAPI.GetLoadedAsset(prefabPath).Cast<GameObject>();
+            prefab = AssetAPI.GetLoadedAsset(prefabPath)?.Cast<GameObject>();
             return prefab != null;
         }
 
@@ -146,7 +146,6 @@ namespace LGTuner.Inject
             GameObject prefab = null;
             var plug = __instance.m_plug;
             Logger.Info($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
-            // fdfix if (plug.m_pariedWith != null) return true;
             if (plug.ExpanderStatus == LG_ZoneExpanderStatus.Connected) return true;
             if (plug.m_isZoneSource) return true;
             if (!BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))

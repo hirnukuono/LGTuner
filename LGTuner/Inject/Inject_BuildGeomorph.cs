@@ -134,6 +134,18 @@ namespace LGTuner.Inject
                     Logger.Error($" - Area count and AreaSeeds item count mismatched! (CFG: {overrideData.AreaSeeds.Length} != AREA: {__result.m_areas.Length}) Area seed will not be applied!");
                 }
             }
+
+            // the following gets run on its own if there's a LevelLayoutDB Custom Geo
+            if (!zone.m_settings.HasCustomGeomorphPrefab)
+            {
+                iLG_CustomGeomorphLogic[] componentsInChildren = __result.GetComponentsInChildren<iLG_CustomGeomorphLogic>();
+                for (int i = 0; i < componentsInChildren.Length; i++)
+                {
+                    componentsInChildren[i].SpawnedOnFloor();
+                    LG_Factory.InjectJob(new LG_CustomGeomorphBuildJob(componentsInChildren[i]), LG_Factory.BatchName.CustomGeomorphBuildJob);
+                    LG_Factory.InjectJob(new LG_CustomGeomorphPostCullingJob(componentsInChildren[i]), LG_Factory.BatchName.CustomGeomorphPostCullingJob);
+                }
+            }
         }
     }
 }
