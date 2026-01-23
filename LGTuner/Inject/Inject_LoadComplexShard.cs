@@ -1,10 +1,12 @@
 ﻿using AssetShards;
 using BepInEx.Unity.IL2CPP;
 using Expedition;
+using GameData;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -50,6 +52,58 @@ namespace LGTuner.Inject
                 Logger.Info("collider fix on geo_64x64_tech_lab_HA_05.prefab done");
                 EntryPoint.AssetsFixed = true;
             }
+
+            /// find out if complexresourceset contains funny bundle assets
+            List<string> prefabstoload = new();
+            List<AssetBundle> loadedbundles = new();
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).CustomGeomorphs_Challenge_1x1)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).CustomGeomorphs_Exit_1x1)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).CustomGeomorphs_Objective_1x1)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToString().ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).GeomorphTiles_1x1)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).GeomorphTiles_2x1)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).GeomorphTiles_2x2)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).ElevatorShafts_1x1)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).PlugCaps)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).DoubleDropPlugsNoGates)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).SingleDropPlugsNoGates)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).StraightPlugsNoGates)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).DoubleDropPlugsWithGates)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).SingleDropPlugsWithGates)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).StraightPlugsWithGates)
+                if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+
+            foreach (var g in prefabstoload)
+                if (EntryPoint.BundleLookup.ContainsKey(g) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(g))
+                    foreach (var temp in EntryPoint.BundleLookup) {
+                        if (temp.Key == g && !EntryPoint.BundleLoadAllLookup.Contains(temp.Value))
+                        {
+                            Logger.Info($"loading bundle asset prefab {g} ..");
+                            UnityEngine.Object asset = temp.Value.LoadAsset(g);
+                            try { AssetShardManager.s_loadedAssetsLookup.Add(g, asset); } catch { }
+                        }
+                        if (temp.Key == g && EntryPoint.BundleLoadAllLookup.Contains(temp.Value))
+                        {
+                            Logger.Info($"loading all assets from bundle {temp.Value.name}");
+                            foreach (var a in temp.Value.GetAllAssetNames())
+                            {
+                                UnityEngine.Object asset = temp.Value.LoadAsset(a);
+                                try { AssetShardManager.s_loadedAssetsLookup.Add(a, asset); } catch { }
+                            }
+                        }
+                    }
 
             foreach (var complex in BuilderInfo.ExtraComplexResourceToLoad)
             {

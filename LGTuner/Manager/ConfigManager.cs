@@ -1,10 +1,13 @@
 ﻿using AssetShards;
+using BepInEx;
 using GTFO.API.Utilities;
+using HarmonyLib;
 using LGTuner.Configs;
 using LGTuner.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace LGTuner.Manager
 {
@@ -15,10 +18,48 @@ namespace LGTuner.Manager
         private static readonly Dictionary<uint, LayoutConfig> _lookup = new();
         private static readonly Dictionary<string, LayoutConfig> _fileNameLookup = new();
 
+        public static void RenameFiles()
+        {
+            string assetBundleDir = Path.Combine(Paths.BepInExRootPath, "Assets", "AssetBundles");
+            string wrongbundleDir = Path.Combine(Paths.ConfigPath, "Assets", "AssetBundles");
+            string[] bundlePaths = Directory.GetFiles(assetBundleDir, "*", SearchOption.AllDirectories).ToArray();
+            if (Directory.Exists(wrongbundleDir)) foreach (var p in Directory.GetFiles(wrongbundleDir, "'", SearchOption.AllDirectories).ToArray()) bundlePaths.AddItem<string>(p);
+            foreach (var gaa in bundlePaths)
+            {
+                var te = gaa.Split("\\").ToArray().Last();
+                if (!EntryPoint._bundlesToRename.Value.Contains(te)) continue;
+                try
+                {
+                    Logger.Info($"renaming file {te} to {te}.fdfd.manifest");
+                    File.Move(gaa, gaa + ".fdfd.manifest");
+                }
+                catch { }
+            }
+
+
+        }
+
         public static void LoadShardForFixingAssets()
         {
             AssetShardManager.LoadShard(AssetShardManager.GetShardName(AssetBundleName.Complex_Service, AssetBundleShard.S6));
             AssetShardManager.LoadShard(AssetShardManager.GetShardName(AssetBundleName.Complex_Tech, AssetBundleShard.S10));
+
+            string assetBundleDir = Path.Combine(Paths.BepInExRootPath, "Assets", "AssetBundles");
+            string[] bundlePaths = Directory.GetFiles(assetBundleDir, "*", SearchOption.AllDirectories).ToArray();
+            foreach (var f in bundlePaths)
+            {
+
+                if (!f.Contains(".fdfd.manifest")) continue;
+                Logger.Info($"loading assetbundle {f}");
+                var te = f.Split("\\").ToArray().Last().Split(".").ToArray().First();
+                UnityEngine.AssetBundle t = UnityEngine.AssetBundle.LoadFromFile(f);
+                if (EntryPoint._bundlesToLoadAllFrom.Value.Contains(te))
+                {
+                    Logger.Info($"bundle {t.name} file {te} marked as load-all-prefabs");
+                    EntryPoint.BundleLoadAllLookup.Add(t);
+                }
+                foreach (var c in t.GetAllAssetNames()) EntryPoint.BundleLookup.Add(c.ToUpperInvariant(), t);
+            }
         }
 
         public static void Init()
@@ -121,7 +162,7 @@ namespace LGTuner.Manager
 
         private static void DumpLevel()
         {
-            
+
         }
 
         private static void DumpLayerToConfig()

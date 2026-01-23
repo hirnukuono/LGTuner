@@ -1,4 +1,5 @@
 ﻿using AIGraph;
+using AssetShards;
 using Expedition;
 using GameData;
 using GTFO.API;
@@ -162,6 +163,29 @@ namespace LGTuner.Inject
             {
                 if (dimLayer.TileOverrides[0].X == 0 && dimLayer.TileOverrides[0].Z == 0 && !string.IsNullOrEmpty(dimLayer.TileOverrides[0].Geomorph))
                 {
+                    /// assetbundle styph
+                    if (EntryPoint.BundleLookup.ContainsKey(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant()))
+                        foreach (var b in EntryPoint.BundleLookup)
+                        {
+                            if (b.Key == dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                            {
+                                Logger.Info($"loading bundle asset prefab {dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant()}");
+                                UnityEngine.Object asset = b.Value.LoadAsset(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant());
+                                try { AssetShardManager.s_loadedAssetsLookup.Add(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant(), asset); } catch { }
+                            }
+                            if (b.Key == dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                            {
+                                Logger.Info($"loading all asset prefabs from bundle {b.Value.name}");
+                                foreach (var a in b.Value.GetAllAssetNames())
+                                {
+                                    UnityEngine.Object asset = b.Value.LoadAsset(a);
+                                    try { AssetShardManager.s_loadedAssetsLookup.Add(a, asset); } catch { }
+                                }
+                            }
+                        }
+
+
+
                     customGeomorph = AssetAPI.GetLoadedAsset(dimLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>();
                     Logger.Info($" - dim {dimensionIndex} elevator overriden! {customGeomorph.name}");
                 }

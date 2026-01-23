@@ -1,4 +1,5 @@
-﻿using Expedition;
+﻿using AssetShards;
+using Expedition;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
@@ -41,6 +42,27 @@ namespace LGTuner.Inject
 
             if (!string.IsNullOrEmpty(MainLayer.TileOverrides[0].Geomorph))
             {
+                if (EntryPoint.BundleLookup.ContainsKey(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant()))
+                    foreach (var b in EntryPoint.BundleLookup)
+                    {
+                        if (b.Key == MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                        {
+                            Logger.Info($"loading bundle asset prefab {MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant()}");
+                            UnityEngine.Object asset = b.Value.LoadAsset(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant());
+                            try { AssetShardManager.s_loadedAssetsLookup.Add(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant(), asset); } catch { }
+                        }
+                        if (b.Key == MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                        {
+                            Logger.Info($"loading all assets from bundle {b.Value.name}");
+                            foreach (var a in b.Value.GetAllAssetNames())
+                            {
+                                UnityEngine.Object asset = b.Value.LoadAsset(a);
+                                try { AssetShardManager.s_loadedAssetsLookup.Add(a, asset); } catch { }
+                            }
+                        }
+                    }
+
+
                 gameObject = AssetAPI.GetLoadedAsset(MainLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>();
                 if (gameObject == null)
                 {
