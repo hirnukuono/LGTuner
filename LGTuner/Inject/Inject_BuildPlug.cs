@@ -140,7 +140,7 @@ namespace LGTuner.Inject
                         foreach (var a in b.Value.GetAllAssetNames())
                         {
                             UnityEngine.Object asset = b.Value.LoadAsset(a);
-                            try { AssetShardManager.s_loadedAssetsLookup.Add(a, asset); } catch { }
+                            try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
                         }
                     }
                 }

@@ -19,6 +19,37 @@ namespace LGTuner.Inject
         [HarmonyPrefix]
         private static bool Prefix(LG_SetupFloor __instance, ref bool __result)
         {
+            /// shardit ladattu
+
+            foreach (var m in AssetShardManager.s_loadedManifests)
+            {
+                if (m.Key.Contains("Complex_Service") && !EntryPoint.ServiceFixed)
+                {
+                    var go2 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01.prefab");
+                    foreach (var tra in go2.GetComponentsInChildren<Transform>())
+                    {
+                        if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
+                    }
+                    Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
+                    EntryPoint.ServiceFixed = true;
+                }
+                if (m.Key.Contains("Complex_Tech") && !EntryPoint.TechFixed)
+                {
+                    var go3 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Tech/Geomorphs/geo_64x64_tech_lab_HA_05.prefab");
+                    var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
+                    foreach (var c in caps)
+                        if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
+                        {
+                            var p = c.m_prefab;
+                            foreach (var g in p.GetComponentsInChildren<Transform>())
+                                if (g.name == "Capsulecollider")
+                                    g.transform.localScale = new(0.5f, 1, 0.5f);
+                        }
+                    Logger.Info("collider fix on geo_64x64_tech_lab_HA_05.prefab done");
+                    EntryPoint.TechFixed = true;
+                }
+            }
+
             LayoutConfig MainLayer = null;
             Debug.Log(Deb.LG("LG_SetupFloor.Build"));
             GameObject gameObject = null;
@@ -57,7 +88,7 @@ namespace LGTuner.Inject
                             foreach (var a in b.Value.GetAllAssetNames())
                             {
                                 UnityEngine.Object asset = b.Value.LoadAsset(a);
-                                try { AssetShardManager.s_loadedAssetsLookup.Add(a, asset); } catch { }
+                                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
                             }
                         }
                     }

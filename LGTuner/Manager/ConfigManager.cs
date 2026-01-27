@@ -18,6 +18,21 @@ namespace LGTuner.Manager
         private static readonly Dictionary<uint, LayoutConfig> _lookup = new();
         private static readonly Dictionary<string, LayoutConfig> _fileNameLookup = new();
 
+
+        public static void UnloadData()
+        {
+            List<UnityEngine.Object> listToRemove = new();
+            foreach (var b in EntryPoint.BundleLookup)
+            {
+                if (AssetShardManager.s_loadedAssetsLookup.ContainsKey(b.Key.ToUpperInvariant()) && !EntryPoint.CustomMarkerPrefabs.Contains(b.Key))
+                {
+                    listToRemove.Add(AssetShardManager.s_loadedAssetsLookup[b.Key.ToUpperInvariant()]);
+                    AssetShardManager.s_loadedAssetsLookup.Remove(b.Key.ToUpperInvariant());
+                }
+            }
+            foreach (var a in listToRemove) UnityEngine.Object.Destroy(a);
+        }
+
         public static void RenameFiles()
         {
             string assetBundleDir = Path.Combine(Paths.BepInExRootPath, "Assets", "AssetBundles");
@@ -31,18 +46,14 @@ namespace LGTuner.Manager
                 try
                 {
                     Logger.Info($"renaming file {te} to {te}.fdfd.manifest");
-                    File.Move(gaa, gaa + ".fdfd.manifest");
+                    File.Move(gaa, gaa + ".fdfd.manifest", true);
                 }
                 catch { }
             }
-
-
         }
 
-        public static void LoadShardForFixingAssets()
+        public static void LoadCustomBundles()
         {
-            AssetShardManager.LoadShard(AssetShardManager.GetShardName(AssetBundleName.Complex_Service, AssetBundleShard.S6));
-            AssetShardManager.LoadShard(AssetShardManager.GetShardName(AssetBundleName.Complex_Tech, AssetBundleShard.S10));
 
             string assetBundleDir = Path.Combine(Paths.BepInExRootPath, "Assets", "AssetBundles");
             string[] bundlePaths = Directory.GetFiles(assetBundleDir, "*", SearchOption.AllDirectories).ToArray();

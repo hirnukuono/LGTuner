@@ -5,6 +5,7 @@ using GameData;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
+using MultiplayerBasicExample;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,37 +24,16 @@ namespace LGTuner.Inject
                 return;
 
             // fix assets
-            if (!EntryPoint.AssetsFixed)
+            if (!IL2CPPChainloader.Instance.Plugins.TryGetValue("StairsFix", out var asdasdasdinfo) && !EntryPoint.StairsFixed)
             {
-                if (!IL2CPPChainloader.Instance.Plugins.TryGetValue("StairsFix", out var asdasdasdinfo))
-                {
-                    var go = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Dimensions/Desert/Dimension_Desert_Mining_Shaft.prefab");
-                    var ladders = go.GetComponentsInChildren<LG_Ladder>();
-                    ladders[2].gameObject.transform.position += new Vector3(0f, 0f, -1.5f);
-                    Logger.Info("navmesh fix on Dimension_Desert_Mining_Shaft.prefab (StairsFix) done");
-                }
-                var go2 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01.prefab");
-                foreach (var tra in go2.GetComponentsInChildren<Transform>())
-                {
-                    if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
-                }
-                Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
-
-                var go3 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Tech/Geomorphs/geo_64x64_tech_lab_HA_05.prefab");
-                var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
-                foreach (var c in caps)
-                    if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
-                    {
-                        var p = c.m_prefab;
-                        foreach (var g in p.GetComponentsInChildren<Transform>())
-                            if (g.name == "Capsulecollider")
-                                g.transform.localScale = new(0.5f, 1, 0.5f);
-                    }
-                Logger.Info("collider fix on geo_64x64_tech_lab_HA_05.prefab done");
-                EntryPoint.AssetsFixed = true;
+                var go = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Dimensions/Desert/Dimension_Desert_Mining_Shaft.prefab");
+                var ladders = go.GetComponentsInChildren<LG_Ladder>();
+                ladders[2].gameObject.transform.position += new Vector3(0f, 0f, -1.5f);
+                Logger.Info("navmesh fix on Dimension_Desert_Mining_Shaft.prefab (StairsFix) done");
+                EntryPoint.StairsFixed = true;
             }
 
-            /// find out if complexresourceset contains funny bundle assets
+            /// find out if complexresourceset and marker datablocks contain funny bundle assets
             List<string> prefabstoload = new();
             List<AssetBundle> loadedbundles = new();
             foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).CustomGeomorphs_Challenge_1x1)
@@ -85,14 +65,55 @@ namespace LGTuner.Inject
             foreach (var g in ComplexResourceSetDataBlock.GetBlock(RundownManager.ActiveExpedition.Expedition.ComplexResourceData).StraightPlugsWithGates)
                 if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
 
+            foreach (var b in MiningMarkerDataBlock.GetAllBlocks())
+                if (b != null)
+                    if (b.CommonData != null)
+                        foreach (var c in b.CommonData.Compositions)
+                            if (c != null)
+                                if (c.prefab != null)
+                                    if (EntryPoint.BundleLookup.ContainsKey(c.prefab.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(c.prefab.ToUpperInvariant()))
+                                    {
+                                        UnityEngine.Object asset = EntryPoint.BundleLookup[c.prefab.ToUpperInvariant()].LoadAsset(c.prefab.ToUpperInvariant());
+                                        try { AssetShardManager.s_loadedAssetsLookup.Add(c.prefab.ToUpperInvariant(), asset); } catch { }
+                                        EntryPoint.CustomMarkerPrefabs.Add(c.prefab.ToUpperInvariant());
+                                    }
+
+            foreach (var b in TechMarkerDataBlock.GetAllBlocks())
+                if (b != null)
+                    if (b.CommonData != null)
+                        foreach (var c in b.CommonData.Compositions)
+                            if (c != null)
+                                if (c.prefab != null)
+                                    if (EntryPoint.BundleLookup.ContainsKey(c.prefab.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(c.prefab.ToUpperInvariant()))
+                                    {
+                                        UnityEngine.Object asset = EntryPoint.BundleLookup[c.prefab.ToUpperInvariant()].LoadAsset(c.prefab.ToUpperInvariant());
+                                        try { AssetShardManager.s_loadedAssetsLookup.Add(c.prefab.ToUpperInvariant(), asset); } catch { }
+                                        EntryPoint.CustomMarkerPrefabs.Add(c.prefab.ToUpperInvariant());
+
+                                    }
+
+            foreach (var b in ServiceMarkerDataBlock.GetAllBlocks())
+                if (b != null)
+                    if (b.CommonData != null)
+                        foreach (var c in b.CommonData.Compositions)
+                            if (c != null)
+                                if (c.prefab != null)
+                                    if (EntryPoint.BundleLookup.ContainsKey(c.prefab.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(c.prefab.ToUpperInvariant()))
+                                    {
+                                        UnityEngine.Object asset = EntryPoint.BundleLookup[c.prefab.ToUpperInvariant()].LoadAsset(c.prefab.ToUpperInvariant());
+                                        try { AssetShardManager.s_loadedAssetsLookup.Add(c.prefab.ToUpperInvariant(), asset); } catch { }
+                                        EntryPoint.CustomMarkerPrefabs.Add(c.prefab.ToUpperInvariant());
+                                    }
+
             foreach (var g in prefabstoload)
                 if (EntryPoint.BundleLookup.ContainsKey(g) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(g))
-                    foreach (var temp in EntryPoint.BundleLookup) {
+                    foreach (var temp in EntryPoint.BundleLookup)
+                    {
                         if (temp.Key == g && !EntryPoint.BundleLoadAllLookup.Contains(temp.Value))
                         {
                             Logger.Info($"loading bundle asset prefab {g} ..");
                             UnityEngine.Object asset = temp.Value.LoadAsset(g);
-                            try { AssetShardManager.s_loadedAssetsLookup.Add(g, asset); } catch { }
+                            try { AssetShardManager.s_loadedAssetsLookup.Add(g.ToUpperInvariant(), asset); } catch { }
                         }
                         if (temp.Key == g && EntryPoint.BundleLoadAllLookup.Contains(temp.Value))
                         {
@@ -100,7 +121,7 @@ namespace LGTuner.Inject
                             foreach (var a in temp.Value.GetAllAssetNames())
                             {
                                 UnityEngine.Object asset = temp.Value.LoadAsset(a);
-                                try { AssetShardManager.s_loadedAssetsLookup.Add(a, asset); } catch { }
+                                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
                             }
                         }
                     }

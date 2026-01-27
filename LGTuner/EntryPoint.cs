@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using LevelGeneration;
 using LGTuner.Manager;
 using LGTuner.Utils;
 using System;
@@ -19,13 +20,16 @@ namespace LGTuner
     [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     public class EntryPoint : BasePlugin
     {
-        public static bool AssetsFixed = false;
         public static Dictionary<string, AssetBundle> BundleLookup = new();
         public static string CONFIG_PATH = Path.Combine(Paths.ConfigPath, "LGTuner.cfg");
         public static ConfigFile config = new(CONFIG_PATH, true);
         public static ConfigEntry<string> _bundlesToRename;
         public static ConfigEntry<string> _bundlesToLoadAllFrom;
         public static List<AssetBundle> BundleLoadAllLookup = new();
+        public static bool StairsFixed = false;
+        public static bool TechFixed = false;
+        public static bool ServiceFixed = false;
+        public static List<string> CustomMarkerPrefabs = new();
 
         public override void Load()
         {
@@ -35,7 +39,8 @@ namespace LGTuner
             HarmonyInstance.PatchAll();
             ConfigManager.RenameFiles();
             ConfigManager.Init();
-            AssetShardManager.add_OnSharedAsssetLoaded((Action)ConfigManager.LoadShardForFixingAssets);
+            AssetShardManager.add_OnSharedAsssetLoaded((Action)ConfigManager.LoadCustomBundles);
+            LG_Factory.add_OnFactoryBuildDone((Action)ConfigManager.UnloadData);
         }
 
         public Harmony HarmonyInstance { get; private set; }
