@@ -231,6 +231,26 @@ namespace LGTuner.Inject
                 return false;
             }
 
+            if (EntryPoint.BundleLookup.ContainsKey(prefabPath.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(prefabPath.ToUpperInvariant()))
+                foreach (var b in EntryPoint.BundleLookup)
+                {
+                    if (b.Key == prefabPath.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                    {
+                        Logger.Info($"loading bundle asset prefab {prefabPath.ToUpperInvariant()}");
+                        UnityEngine.Object asset = b.Value.LoadAsset(prefabPath.ToUpperInvariant());
+                        try { AssetShardManager.s_loadedAssetsLookup.Add(prefabPath.ToUpperInvariant(), asset); } catch { }
+                    }
+                    if (b.Key == prefabPath.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                    {
+                        Logger.Info($"loading all assets from bundle {b.Value}");
+                        foreach (var a in b.Value.GetAllAssetNames())
+                        {
+                            UnityEngine.Object asset = b.Value.LoadAsset(a);
+                            try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+                        }
+                    }
+                }
+
             prefab = AssetAPI.GetLoadedAsset(prefabPath).Cast<GameObject>();
             return prefab != null;
         }

@@ -14,7 +14,7 @@ namespace LGTuner.Inject
     [HarmonyPatch(typeof(LG_SetupFloor), nameof(LG_SetupFloor.Build))]
     internal static class Inject_SetupFloor
     {
-        private static LayoutConfig _configContext = null;
+        //private static LayoutConfig _configContext = null;
 
         [HarmonyPrefix]
         private static bool Prefix(LG_SetupFloor __instance, ref bool __result)
@@ -26,27 +26,33 @@ namespace LGTuner.Inject
                 if (m.Key.Contains("Complex_Service") && !EntryPoint.ServiceFixed)
                 {
                     var go2 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01.prefab");
-                    foreach (var tra in go2.GetComponentsInChildren<Transform>())
+                    if (go2 != null)
                     {
-                        if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
+                        foreach (var tra in go2.GetComponentsInChildren<Transform>())
+                        {
+                            if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
+                        }
+                        Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
+                        EntryPoint.ServiceFixed = true;
                     }
-                    Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
-                    EntryPoint.ServiceFixed = true;
                 }
                 if (m.Key.Contains("Complex_Tech") && !EntryPoint.TechFixed)
                 {
                     var go3 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Tech/Geomorphs/geo_64x64_tech_lab_HA_05.prefab");
-                    var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
-                    foreach (var c in caps)
-                        if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
-                        {
-                            var p = c.m_prefab;
-                            foreach (var g in p.GetComponentsInChildren<Transform>())
-                                if (g.name == "Capsulecollider")
-                                    g.transform.localScale = new(0.5f, 1, 0.5f);
-                        }
-                    Logger.Info("collider fix on geo_64x64_tech_lab_HA_05.prefab done");
-                    EntryPoint.TechFixed = true;
+                    if (go3 != null)
+                    {
+                        var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
+                        foreach (var c in caps)
+                            if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
+                            {
+                                var p = c.m_prefab;
+                                foreach (var g in p.GetComponentsInChildren<Transform>())
+                                    if (g.name == "Capsulecollider")
+                                        g.transform.localScale = new(0.5f, 1, 0.5f);
+                            }
+                        Logger.Info("collider fix on geo_64x64_tech_lab_HA_05.prefab done");
+                        EntryPoint.TechFixed = true;
+                    }
                 }
             }
 

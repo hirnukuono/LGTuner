@@ -1,5 +1,6 @@
 ﻿using AssetShards;
 using BepInEx;
+using GameData;
 using GTFO.API.Utilities;
 using HarmonyLib;
 using LGTuner.Configs;
@@ -17,6 +18,115 @@ namespace LGTuner.Manager
         private static readonly List<LayoutConfig> _layouts = new();
         private static readonly Dictionary<uint, LayoutConfig> _lookup = new();
         private static readonly Dictionary<string, LayoutConfig> _fileNameLookup = new();
+
+
+        public static void LoadData()
+        {
+            /// find out if complexresourceset and marker datablocks contain funny bundle assets
+            List<string> prefabstoload = new();
+            List<uint> crses = new();
+            crses.Add(RundownManager.ActiveExpedition.Expedition.ComplexResourceData);
+
+            foreach (var b in MiningMarkerDataBlock.GetAllBlocks())
+                if (b != null)
+                    if (b.CommonData != null)
+                        foreach (var c in b.CommonData.Compositions)
+                            if (c != null)
+                                if (c.prefab != null)
+                                    if (EntryPoint.BundleLookup.ContainsKey(c.prefab.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(c.prefab.ToUpperInvariant()))
+                                    {
+                                        UnityEngine.Object asset = EntryPoint.BundleLookup[c.prefab.ToUpperInvariant()].LoadAsset(c.prefab.ToUpperInvariant());
+                                        try { AssetShardManager.s_loadedAssetsLookup.Add(c.prefab.ToUpperInvariant(), asset); } catch { }
+                                        EntryPoint.CustomMarkerPrefabs.Add(c.prefab.ToUpperInvariant());
+                                    }
+
+            foreach (var b in TechMarkerDataBlock.GetAllBlocks())
+                if (b != null)
+                    if (b.CommonData != null)
+                        foreach (var c in b.CommonData.Compositions)
+                            if (c != null)
+                                if (c.prefab != null)
+                                    if (EntryPoint.BundleLookup.ContainsKey(c.prefab.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(c.prefab.ToUpperInvariant()))
+                                    {
+                                        UnityEngine.Object asset = EntryPoint.BundleLookup[c.prefab.ToUpperInvariant()].LoadAsset(c.prefab.ToUpperInvariant());
+                                        try { AssetShardManager.s_loadedAssetsLookup.Add(c.prefab.ToUpperInvariant(), asset); } catch { }
+                                        EntryPoint.CustomMarkerPrefabs.Add(c.prefab.ToUpperInvariant());
+
+                                    }
+
+            foreach (var b in ServiceMarkerDataBlock.GetAllBlocks())
+                if (b != null)
+                    if (b.CommonData != null)
+                        foreach (var c in b.CommonData.Compositions)
+                            if (c != null)
+                                if (c.prefab != null)
+                                    if (EntryPoint.BundleLookup.ContainsKey(c.prefab.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(c.prefab.ToUpperInvariant()))
+                                    {
+                                        UnityEngine.Object asset = EntryPoint.BundleLookup[c.prefab.ToUpperInvariant()].LoadAsset(c.prefab.ToUpperInvariant());
+                                        try { AssetShardManager.s_loadedAssetsLookup.Add(c.prefab.ToUpperInvariant(), asset); } catch { }
+                                        EntryPoint.CustomMarkerPrefabs.Add(c.prefab.ToUpperInvariant());
+                                    }
+
+            foreach (var di in RundownManager.ActiveExpedition.DimensionDatas)
+            {
+                if (!crses.Contains(DimensionDataBlock.GetBlock(di.DimensionData).DimensionData.DimensionResourceSetID))
+                    crses.Add(DimensionDataBlock.GetBlock(di.DimensionData).DimensionData.DimensionResourceSetID);
+            }
+
+            foreach (var crs in crses)
+            {
+                var tempdb = ComplexResourceSetDataBlock.GetBlock(crs);
+                foreach (var g in tempdb.CustomGeomorphs_Challenge_1x1)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.CustomGeomorphs_Exit_1x1)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.CustomGeomorphs_Objective_1x1)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.GeomorphTiles_1x1)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.GeomorphTiles_2x1)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.GeomorphTiles_2x2)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.ElevatorShafts_1x1)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.PlugCaps)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.DoubleDropPlugsNoGates)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.SingleDropPlugsNoGates)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.StraightPlugsNoGates)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.DoubleDropPlugsWithGates)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.SingleDropPlugsWithGates)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+                foreach (var g in tempdb.StraightPlugsWithGates)
+                    if (!prefabstoload.Contains(g.Prefab.ToUpperInvariant())) prefabstoload.Add(g.Prefab.ToUpperInvariant());
+            }
+
+            foreach (var g in prefabstoload)
+                if (EntryPoint.BundleLookup.ContainsKey(g) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(g))
+                    foreach (var temp in EntryPoint.BundleLookup)
+                    {
+                        if (temp.Key == g && !EntryPoint.BundleLoadAllLookup.Contains(temp.Value))
+                        {
+                            Logger.Info($"loading bundle asset prefab {g} ..");
+                            UnityEngine.Object asset = temp.Value.LoadAsset(g);
+                            try { AssetShardManager.s_loadedAssetsLookup.Add(g.ToUpperInvariant(), asset); } catch { }
+                        }
+                        if (temp.Key == g && EntryPoint.BundleLoadAllLookup.Contains(temp.Value))
+                        {
+                            Logger.Info($"loading all assets from bundle {temp.Value.name}");
+                            foreach (var a in temp.Value.GetAllAssetNames())
+                            {
+                                UnityEngine.Object asset = temp.Value.LoadAsset(a);
+                                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+                            }
+                        }
+                    }
+        }
 
 
         public static void UnloadData()
