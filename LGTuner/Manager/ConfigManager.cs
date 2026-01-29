@@ -1,5 +1,6 @@
 ﻿using AssetShards;
 using BepInEx;
+using FluffyUnderware.DevTools.Extensions;
 using GameData;
 using GTFO.API.Utilities;
 using HarmonyLib;
@@ -140,7 +141,7 @@ namespace LGTuner.Manager
                     AssetShardManager.s_loadedAssetsLookup.Remove(b.Key.ToUpperInvariant());
                 }
             }
-            foreach (var a in listToRemove) UnityEngine.Object.Destroy(a);
+            foreach (var a in listToRemove) UnityEngine.Object.Destroy(a); 
         }
 
         public static void RenameFiles()
