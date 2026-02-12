@@ -16,6 +16,7 @@ namespace LGTuner.Configs
         public string[] Plugs { get; set; } = Array.Empty<string>();
         public bool OverridePlugWithNoGateChance { get; set; } = false;
         public float PlugWithNoGateChance { get; set; } = 0.5f;
+        public bool TryForceCustomGeoAreaAssignment { get; set; } = false;
 
         private int _curGeomorphIndex = 0;
         private int _curAltitudeIndex = 0;

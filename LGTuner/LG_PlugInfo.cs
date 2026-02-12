@@ -27,7 +27,7 @@ namespace LGTuner
         Towards_Forward,
         Towards_Backward,
         Towards_Left,
-        Towards_Right
+        Towards_Right,
     }
 
     public struct LG_PlugInfo
@@ -190,6 +190,7 @@ namespace LGTuner
                     DirectionType.Right => DirectionType.Backward,
                     _ => throw new ArgumentOutOfRangeException(nameof(direction))
                 },
+
                 RotateType.Towards_Forward => DirectionType.Forward,
                 RotateType.Towards_Backward => DirectionType.Backward,
                 RotateType.Towards_Left => DirectionType.Left,

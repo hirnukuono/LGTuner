@@ -21,6 +21,7 @@ namespace LGTuner.Configs
         public string RightPlug { get; set; } = string.Empty;
         public bool OverridePlugWithNoGateChance { get; set; } = false;
         public float PlugWithNoGateChance { get; set; } = 0.5f;
+        public bool TryForceCustomGeoAreaAssignment { get; set; } = false;
         [JsonIgnore] public ZoneOverrideData ZoneData { get; set; }
     }
 }

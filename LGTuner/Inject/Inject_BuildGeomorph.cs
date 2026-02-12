@@ -1,9 +1,18 @@
-﻿using AssetShards;
+﻿using AIGraph;
+using AssetShards;
+using Discord;
+using FluffyUnderware.DevTools.Extensions;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using LGTuner.Configs;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Policy;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
+using UnityEngine.Tilemaps;
 
 namespace LGTuner.Inject
 {
@@ -19,6 +28,8 @@ namespace LGTuner.Inject
         }
 
         private static LayoutConfig _configContext = null;
+        private static LayoutConfig _configContext2 = null;
+
         private static RotateType _nextRotateType;
 
         [HarmonyPrefix]
@@ -37,7 +48,7 @@ namespace LGTuner.Inject
 
             if (!BuilderInfo.TryGetConfig(zone, out _configContext))
                 return;
-            
+
             if (!_configContext.TryGetTileData(normalPos, out var overrideData))
             {
                 overrideData = _configContext.PopulateTileOverrideForZone(zone, normalPos);
@@ -77,6 +88,7 @@ namespace LGTuner.Inject
                     tilePrefab = tempPrefab;
                 }
             }
+
 
             if (overrideData.Rotation != RotateType.None)
             {
@@ -119,6 +131,7 @@ namespace LGTuner.Inject
             if (_nextRotateType != RotateType.None)
             {
                 var tileObject = __result.gameObject;
+
                 var plugInfo = LG_PlugInfo.BuildPlugInfo(tileObject, tileObject.transform.rotation);
 
                 Logger.Info($" - TRYING ROTATION! PLUG COUNT: {plugInfo.Count}");
@@ -166,6 +179,60 @@ namespace LGTuner.Inject
                     componentsInChildren[i].SpawnedOnFloor();
                     LG_Factory.InjectJob(new LG_CustomGeomorphBuildJob(componentsInChildren[i]), LG_Factory.BatchName.CustomGeomorphBuildJob);
                     LG_Factory.InjectJob(new LG_CustomGeomorphPostCullingJob(componentsInChildren[i]), LG_Factory.BatchName.CustomGeomorphPostCullingJob);
+                }
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyWrapSafe]
+        [HarmonyPatch(typeof(LG_ZoneJob_CreateExpandFromData), nameof(LG_ZoneJob_CreateExpandFromData.Build))]
+        private static void Pre_ZoneJob(LG_ZoneJob_CreateExpandFromData __instance)
+        {
+            if (!__instance.m_zone.m_settings.HasCustomGeomorphInstance) return;
+            if (__instance.m_mainStatus != LG_ZoneJob_CreateExpandFromData.MainStatus.Done) return;
+            TileOverrideData overrideData = null;
+            if (Builder.CurrentFloor == null) return;
+            if (BuilderInfo.TryGetConfig(__instance.m_zone, out _configContext2))
+            {
+                var gridSize = _configContext2.GridSize;
+                var normalGrid = __instance.m_zone.m_settings.CustomGeomorphInstance.GetComponent<LG_Geomorph>().m_tile.ToNormalGrid(gridSize);
+                _configContext2.TryGetTileData(normalGrid, out overrideData);
+            }
+
+            if (overrideData == null) return;
+            if (!overrideData.TryForceCustomGeoAreaAssignment) return;
+
+            // .. it is, here we go!
+            Logger.Info($" - addcustomgeomorphareas firing for {__instance.m_zone.NavInfo.ToString()}");
+            Dictionary<LG_Area, float> listdict = new();
+            foreach (var c in __instance.m_zone.m_areas)
+            {
+                float score = 1000;
+                if (c.m_zone.ID == 0 && c == c.m_zone.m_areas[0]) score = 2000;
+                if (c == c.m_zone.m_sourceExpander.m_linksTo) score = 1500;
+                listdict.Add(c, score - Vector3.Distance(c.Position, __instance.m_zone.m_sourceExpander.m_linksFrom.Position));
+            }
+
+            var finalList = listdict.OrderByDescending(listdict => listdict.Value);
+            __instance.m_zone.m_areas.Clear();
+
+            foreach (var c in finalList)
+            {
+                Logger.Info($" - addcustomgeomorphareas scoredict {c.Key.name} {c.Value}");
+                if (!__instance.m_zone.m_areas.Contains(c.Key)) __instance.m_zone.m_areas.Add(c.Key);
+                
+                foreach (var g in c.Key.gameObject.GetComponentsInChildren<LG_InternalGate>(true))
+                {
+                    if (g.m_linksFrom != null && !__instance.m_zone.m_areas.Contains(g.m_linksFrom))
+                    {
+                        Logger.Info($" - addcustomgeomorphareas adding m_linksFrom {g.m_linksFrom.name}");
+                        __instance.m_zone.m_areas.Add(g.m_linksFrom);
+                    }
+                    if (g.m_linksTo != null && !__instance.m_zone.m_areas.Contains(g.m_linksTo))
+                    {
+                        Logger.Info($" - addcustomgeomorphareas adding m_linksTo {g.m_linksTo.name}");
+                        __instance.m_zone.m_areas.Add(g.m_linksTo);
+                    }
                 }
             }
         }

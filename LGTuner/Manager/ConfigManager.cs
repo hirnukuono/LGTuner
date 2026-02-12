@@ -4,6 +4,7 @@ using FluffyUnderware.DevTools.Extensions;
 using GameData;
 using GTFO.API.Utilities;
 using HarmonyLib;
+using LevelGeneration;
 using LGTuner.Configs;
 using LGTuner.Utils;
 using System;
@@ -19,7 +20,6 @@ namespace LGTuner.Manager
         private static readonly List<LayoutConfig> _layouts = new();
         private static readonly Dictionary<uint, LayoutConfig> _lookup = new();
         private static readonly Dictionary<string, LayoutConfig> _fileNameLookup = new();
-
 
         public static void LoadData()
         {
@@ -70,7 +70,7 @@ namespace LGTuner.Manager
 
             foreach (var di in RundownManager.ActiveExpedition.DimensionDatas)
             {
-                if (!crses.Contains(DimensionDataBlock.GetBlock(di.DimensionData).DimensionData.DimensionResourceSetID))
+                if (di.Enabled && !crses.Contains(DimensionDataBlock.GetBlock(di.DimensionData).DimensionData.DimensionResourceSetID))
                     crses.Add(DimensionDataBlock.GetBlock(di.DimensionData).DimensionData.DimensionResourceSetID);
             }
 
@@ -141,7 +141,7 @@ namespace LGTuner.Manager
                     AssetShardManager.s_loadedAssetsLookup.Remove(b.Key.ToUpperInvariant());
                 }
             }
-            foreach (var a in listToRemove) UnityEngine.Object.Destroy(a); 
+            foreach (var a in listToRemove) UnityEngine.Object.Destroy(a);
         }
 
         public static void RenameFiles()
