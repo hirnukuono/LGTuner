@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace LGTuner
 {
-    [BepInPlugin("LGTuner", "LGTuner", "1.2.3")]
+    [BepInPlugin("LGTuner", "LGTuner", "1.2.4")]
     [BepInProcess("GTFO.exe")]
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
