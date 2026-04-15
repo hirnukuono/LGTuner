@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace LGTuner
 {
-    [BepInPlugin("LGTuner", "LGTuner", "1.2.4")]
+    [BepInPlugin("LGTuner", "LGTuner", "1.2.5")]
     [BepInProcess("GTFO.exe")]
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
@@ -29,6 +29,7 @@ namespace LGTuner
         public static bool StairsFixed = false;
         public static bool TechFixed = false;
         public static bool ServiceFixed = false;
+        public static bool SamDBExitFixed = false;
         public static List<string> CustomMarkerPrefabs = new();
 
         public override void Load()

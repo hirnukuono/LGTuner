@@ -1,5 +1,6 @@
 ﻿using AssetShards;
 using BepInEx;
+using CellMenu;
 using FluffyUnderware.DevTools.Extensions;
 using GameData;
 using GTFO.API.Utilities;
@@ -11,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
 
 namespace LGTuner.Manager
 {

@@ -181,6 +181,18 @@ namespace LGTuner.Inject
                     LG_Factory.InjectJob(new LG_CustomGeomorphPostCullingJob(componentsInChildren[i]), LG_Factory.BatchName.CustomGeomorphPostCullingJob);
                 }
             }
+
+            /// samdb damn you
+            if (__result.name.ToLower().Contains("mining_exit_v1"))
+            {
+                foreach (var t in __result.GetComponentsInChildren<Transform>())
+                    if (t.name.Contains("MrBroRockWall"))
+                    {
+                        foreach (var t2 in t.gameObject.GetComponentsInChildren<Collider>())
+                            Object.Destroy(t2);
+                    }
+                Logger.Info($"navmesh fix on samdb Mining_Exit_V1 done");
+            }
         }
 
         [HarmonyPrefix]
@@ -220,7 +232,7 @@ namespace LGTuner.Inject
             {
                 Logger.Info($" - addcustomgeomorphareas scoredict {c.Key.name} {c.Value}");
                 if (!__instance.m_zone.m_areas.Contains(c.Key)) __instance.m_zone.m_areas.Add(c.Key);
-                
+
                 foreach (var g in c.Key.gameObject.GetComponentsInChildren<LG_InternalGate>(true))
                 {
                     if (g.m_linksFrom != null && !__instance.m_zone.m_areas.Contains(g.m_linksFrom))
