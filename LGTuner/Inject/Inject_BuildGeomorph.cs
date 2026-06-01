@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Policy;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Tilemaps;
 
