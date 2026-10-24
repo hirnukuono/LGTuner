@@ -1,7 +1,5 @@
 ﻿using LevelGeneration;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using LGTuner.Extensions;
 using UnityEngine;
 using Random = System.Random;
 
@@ -22,7 +20,6 @@ namespace LGTuner
         Flip,
         MoveTo_Left,
         MoveTo_Right,
-
         Towards_Random,
         Towards_Forward,
         Towards_Backward,
@@ -50,7 +47,7 @@ namespace LGTuner
         public bool HasLeft { get; private set; }
         public bool HasRight { get; private set; }
 
-        public bool TryGetNewRotation(uint seed, RotateType rotate, out Quaternion rotation)
+        public readonly bool TryGetNewRotation(uint seed, RotateType rotate, out Quaternion rotation)
         {
             var newDirection = GetNewDirection(seed, StartDirection, rotate);
             if (Count >= 4)
@@ -66,7 +63,7 @@ namespace LGTuner
             }
         }
 
-        public bool HasPlug(DirectionType direction)
+        public readonly bool HasPlug(DirectionType direction)
         {
             if (!IsValid)
                 return false;
@@ -128,7 +125,7 @@ namespace LGTuner
             var eulerAngle = rotation.eulerAngles;
             var angle = Mathf.Round(eulerAngle.y);
 
-            Logger.Verbose($"angle: {angle}");
+            //Logger.Verbose($"angle: {angle}");
 
             angle = Mathf.Repeat(angle, 360.0f);
             var index = Mathf.RoundToInt(angle / 90.0f);
@@ -141,7 +138,7 @@ namespace LGTuner
                 3 => DirectionType.Left,
                 _ => DirectionType.Unknown
             };
-            
+
             return newPlugInfo;
         }
 

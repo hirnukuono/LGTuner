@@ -1,38 +1,29 @@
-﻿using GTFO.API;
+﻿using AssetShards;
+using FluffyUnderware.DevTools.Extensions;
+using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using LGTuner.Configs;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace LGTuner.Inject
 {
-    [HarmonyPatch(typeof(LG_LevelBuilder), nameof(LG_LevelBuilder.PlaceRoot))]
+    [HarmonyPatch]
     internal static class Inject_BuildGeomorph
     {
-        [HarmonyPostfix]
-        [HarmonyWrapSafe]
-        [HarmonyPatch(nameof(LG_LevelBuilder.BuildFloor))]
-        private static void Post_BuildFloor()
-        {
-            BuilderInfo.OnResourceSetSelected();
-        }
-
-        private static LayoutConfig _configContext = null;
-        private static LayoutConfig _configContext2 = null;
-
+        private static LayoutConfig _configContext = null!;
+        private static LayoutConfig _configContext2 = null!;
         private static RotateType _nextRotateType;
 
+        [HarmonyPatch(typeof(LG_LevelBuilder), nameof(LG_LevelBuilder.PlaceRoot))]
         [HarmonyPrefix]
         [HarmonyWrapSafe]
-        [HarmonyPatch(nameof(LG_LevelBuilder.PlaceRoot))]
         private static void Pre_PlaceRoot(LG_Tile tile, ref GameObject tilePrefab, ref bool forceAlignToVector, ref Vector3 alignVector, LG_Zone zone)
         {
-            _configContext = null;
+            _configContext = null!;
             _nextRotateType = RotateType.None;
 
-            forceAlignToVector = alignVector != Vector3.zero; //forceAlignToVector is broken, It's needed to doing this
+            forceAlignToVector = alignVector != Vector3.zero; // forceAlignToVector is broken, it's necessary to do this
 
             var gridSize = zone.Dimension.GetGridSize();
             var normalPos = tile.ToNormalGrid(gridSize);
@@ -52,6 +43,27 @@ namespace LGTuner.Inject
             if (!string.IsNullOrEmpty(overrideData.Geomorph))
             {
                 if (overrideData.X == 0 && overrideData.Z == 0) return;
+
+                //if (EntryPoint.BundleLookup.ContainsKey(overrideData.Geomorph.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(overrideData.Geomorph.ToUpperInvariant()))
+                //    foreach (var b in EntryPoint.BundleLookup)
+                //    {
+                //        if (b.Key == overrideData.Geomorph.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                //        {
+                //            Logger.Info($"loading bundle asset prefab {overrideData.Geomorph.ToUpperInvariant()}");
+                //            UnityEngine.Object asset = b.Value.LoadAsset(overrideData.Geomorph.ToUpperInvariant());
+                //            try { AssetShardManager.s_loadedAssetsLookup.Add(overrideData.Geomorph.ToUpperInvariant(), asset); } catch { }
+                //        }
+                //        if (b.Key == overrideData.Geomorph.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                //        {
+                //            Logger.Info($"loading all assets from bundle {b.Value.name}");
+                //            foreach (var a in b.Value.GetAllAssetNames())
+                //            {
+                //                UnityEngine.Object asset = b.Value.LoadAsset(a);
+                //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+                //            }
+                //        }
+                //    }
+
                 var tempPrefab = AssetAPI.GetLoadedAsset(overrideData.Geomorph)?.Cast<GameObject>();
                 if (tempPrefab != null)
                 {
@@ -60,16 +72,23 @@ namespace LGTuner.Inject
                 }
             }
 
-
             if (overrideData.Rotation != RotateType.None)
             {
                 _nextRotateType = overrideData.Rotation;
             }
         }
 
+        [HarmonyPatch(typeof(LG_LevelBuilder), nameof(LG_LevelBuilder.BuildFloor))]
         [HarmonyPostfix]
         [HarmonyWrapSafe]
-        [HarmonyPatch(nameof(LG_LevelBuilder.GetTilePosition))]
+        private static void Post_BuildFloor()
+        {
+            BuilderInfo.OnResourceSetSelected();
+        }
+
+        [HarmonyPatch(typeof(LG_LevelBuilder), nameof(LG_LevelBuilder.GetTilePosition))]
+        [HarmonyPostfix]
+        [HarmonyWrapSafe]
         private static void Post_GetTilePosition(LG_Tile tile, LG_Floor floor, int dimensionIndex, ref Vector3 __result)
         {
             if (_configContext == null)
@@ -91,9 +110,9 @@ namespace LGTuner.Inject
             }
         }
 
+        [HarmonyPatch(typeof(LG_LevelBuilder), nameof(LG_LevelBuilder.PlaceRoot))]
         [HarmonyPostfix]
         [HarmonyWrapSafe]
-        [HarmonyPatch(nameof(LG_LevelBuilder.PlaceRoot))]
         private static void Post_PlaceRoot(LG_Tile tile, LG_Zone zone, LG_Geomorph __result)
         {
             if (_configContext == null)
@@ -160,20 +179,20 @@ namespace LGTuner.Inject
                     if (t.name.Contains("MrBroRockWall"))
                     {
                         foreach (var t2 in t.gameObject.GetComponentsInChildren<Collider>())
-                            Object.Destroy(t2);
+                            GameObject.Destroy(t2);
                     }
                 Logger.Info($"navmesh fix on samdb Mining_Exit_V1 done");
             }
         }
 
+        [HarmonyPatch(typeof(LG_ZoneJob_CreateExpandFromData), nameof(LG_ZoneJob_CreateExpandFromData.Build))]
         [HarmonyPrefix]
         [HarmonyWrapSafe]
-        [HarmonyPatch(typeof(LG_ZoneJob_CreateExpandFromData), nameof(LG_ZoneJob_CreateExpandFromData.Build))]
         private static void Pre_ZoneJob(LG_ZoneJob_CreateExpandFromData __instance)
         {
             if (!__instance.m_zone.m_settings.HasCustomGeomorphInstance) return;
             if (__instance.m_mainStatus != LG_ZoneJob_CreateExpandFromData.MainStatus.Done) return;
-            TileOverrideData overrideData = null;
+            TileOverrideData overrideData = null!;
             if (Builder.CurrentFloor == null) return;
             if (BuilderInfo.TryGetConfig(__instance.m_zone, out _configContext2))
             {

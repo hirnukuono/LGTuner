@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace LGTuner.Configs
 {
@@ -22,6 +19,6 @@ namespace LGTuner.Configs
         public bool OverridePlugWithNoGateChance { get; set; } = false;
         public float PlugWithNoGateChance { get; set; } = 0.5f;
         public bool TryForceCustomGeoAreaAssignment { get; set; } = false;
-        [JsonIgnore] public ZoneOverrideData ZoneData { get; set; }
+        [JsonIgnore] public ZoneOverrideData ZoneData { get; set; } = null!;
     }
 }

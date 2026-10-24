@@ -1,4 +1,5 @@
 ﻿using AIGraph;
+using AssetShards;
 using Expedition;
 using GameData;
 using GTFO.API;
@@ -139,14 +140,14 @@ namespace LGTuner.Inject
             gridSize = 40;
             SubComplex subcomplex = Builder.LayerBuildDatas[0].m_zoneBuildDatas[0].SubComplex;
             if (dimensionData.IsStaticDimension) return true;
-            LayoutConfig dimLayer = null;
+            LayoutConfig dimLayer = null!;
             var layout = LevelLayoutDataBlock.GetBlock(dimensionData.LevelLayoutData);
-            ConfigManager.TryGetConfig(layout.persistentID, out dimLayer);
+            ConfigManager.TryGetConfig(layout.persistentID, out dimLayer!);
             if (dimLayer == null) return true;
             if (dimLayer.TileOverrides.Length == 0) return true;
             Logger.Info($"in createdim prefix gridsize {gridSize} ..");
             cellSize = 64f;
-            GameObject customGeomorph = null;
+            GameObject customGeomorph = null!;
             XXHashSequence xXHashSequence = new XXHashSequence(seed);
             Vector3 gridPosition = position - new Vector3(cellSize, 0f, cellSize) * gridSize * 0.5f;
             LG_TileShape lG_TileShape = __instance.CreateTileShape(LG_TileShapeType.s1x1, cellSize, ref gridPosition);
@@ -162,7 +163,30 @@ namespace LGTuner.Inject
             {
                 if (dimLayer.TileOverrides[0].X == 0 && dimLayer.TileOverrides[0].Z == 0 && !string.IsNullOrEmpty(dimLayer.TileOverrides[0].Geomorph))
                 {
-                    customGeomorph = AssetAPI.GetLoadedAsset(dimLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>();
+                    ///// assetbundle styph
+                    //if (EntryPoint.BundleLookup.ContainsKey(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant()))
+                    //    foreach (var b in EntryPoint.BundleLookup)
+                    //    {
+                    //        if (b.Key == dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                    //        {
+                    //            Logger.Info($"loading bundle asset prefab {dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant()}");
+                    //            UnityEngine.Object asset = b.Value.LoadAsset(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant());
+                    //            try { AssetShardManager.s_loadedAssetsLookup.Add(dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant(), asset); } catch { }
+                    //        }
+                    //        if (b.Key == dimLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                    //        {
+                    //            Logger.Info($"loading all asset prefabs from bundle {b.Value.name}");
+                    //            foreach (var a in b.Value.GetAllAssetNames())
+                    //            {
+                    //                UnityEngine.Object asset = b.Value.LoadAsset(a);
+                    //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+                    //            }
+                    //        }
+                    //    }
+
+
+
+                    customGeomorph = AssetAPI.GetLoadedAsset(dimLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>()!;
                     Logger.Info($" - dim {dimensionIndex} elevator overriden! {customGeomorph.name}");
                 }
             }

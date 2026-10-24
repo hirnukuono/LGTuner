@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
-using Random = System.Random;
+﻿using UnityEngine;
 
-namespace LGTuner
+namespace LGTuner.Extensions
 {
     public static class RandomExtensions
     {
-        public static uint NextUint(this Random random)
+        public static uint NextUInt(this System.Random random)
         {
             uint thirtyBits = (uint)random.Next(1 << 30);
             uint twoBits = (uint)random.Next(1 << 2);
             return (thirtyBits << 2) | twoBits;
         }
 
-        public static float NextFloat(this Random random)
+        public static float NextFloat01(this System.Random random)
         {
-            return Mathf.Clamp01((float)random.NextDouble());
+            return Mathf.Clamp01(random.NextSingle());
         }
 
         public static int ToSeed(this uint seed)

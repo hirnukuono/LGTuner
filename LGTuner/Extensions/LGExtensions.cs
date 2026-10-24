@@ -1,8 +1,5 @@
 ﻿using LevelGeneration;
 using LevelGeneration.Core;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace LGTuner
@@ -66,7 +63,7 @@ namespace LGTuner
             {
                 return floor.GetDimension((eDimensionIndex)dimensionIndex, out dimension);
             }
-            dimension = null;
+            dimension = null!;
             return false;
         }
 
@@ -76,7 +73,7 @@ namespace LGTuner
             {
                 return floor.GetDimension(dimensionIndex, out dimension);
             }
-            dimension = null;
+            dimension = null!;
             return false;
         }
     }

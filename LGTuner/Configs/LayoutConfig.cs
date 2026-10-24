@@ -1,19 +1,16 @@
 ﻿using Expedition;
 using GameData;
-using GTFO.API;
 using LevelGeneration;
 using LevelGeneration.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using UnityEngine;
 
 namespace LGTuner.Configs
 {
     public sealed class LayoutConfig
     {
+        [JsonIgnore]
+        public static readonly LayoutConfig Empty = new();
+
         public uint LevelLayoutID { get; set; }
         public Complex[] ExtraComplexResourceToLoad { get; set; } = Array.Empty<Complex>();
         public ZoneOverrideData[] ZoneOverrides { get; set; } = Array.Empty<ZoneOverrideData>();
@@ -52,7 +49,7 @@ namespace LGTuner.Configs
             if (x >= GridSize)
             {
                 Logger.Error($"TryGetTileData grid x was out of range! {x}:{GridSize}");
-                overrideData = null;
+                overrideData = null!;
                 return false;
             }
 
@@ -60,7 +57,7 @@ namespace LGTuner.Configs
             if (z >= GridSize)
             {
                 Logger.Error($"TryGetTileData grid Z was out of range! {z}:{GridSize}");
-                overrideData = null;
+                overrideData = null!;
                 return false;
             }
             overrideData = _builtTileOverrides[x, z];
@@ -75,7 +72,7 @@ namespace LGTuner.Configs
         public TileOverrideData PopulateTileOverrideForZone(LG_Zone zone, LG_GridPosition normalGridPosition)
         {
             if (!TryGetZoneOverride(zone.LocalIndex, out var zoneOverrideData))
-                return null;
+                return null!;
 
             if (TryGetTileData(normalGridPosition, out var tileData))
             {
@@ -98,8 +95,8 @@ namespace LGTuner.Configs
                 return newTileData;
             }
         }
-        
-        private void TryApplyOverrides(ZoneOverrideData zoneOverrideData, TileOverrideData tileOverrideData)
+
+        private static void TryApplyOverrides(ZoneOverrideData zoneOverrideData, TileOverrideData tileOverrideData)
         {
             if (zoneOverrideData.OverrideGeomorphs && string.IsNullOrEmpty(tileOverrideData.Geomorph))
             {
@@ -127,7 +124,7 @@ namespace LGTuner.Configs
 
         public bool TryGetZoneOverride(eLocalZoneIndex localIndex, out ZoneOverrideData data)
         {
-            data = ZoneOverrides.SingleOrDefault(z => z.LocalIndex == localIndex);
+            data = ZoneOverrides.SingleOrDefault(z => z.LocalIndex == localIndex)!;
             return data != null;
         }
     }

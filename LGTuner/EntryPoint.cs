@@ -1,34 +1,29 @@
-﻿using BepInEx;
+﻿using AmorLib.Dependencies;
+using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-using LevelGeneration;
 using LGTuner.Manager;
-using LGTuner.Utils;
-using System;
-using System.Collections.Generic;
 
 namespace LGTuner
 {
-    [BepInPlugin("LGTuner", "LGTuner", "1.2.8")]
+    [BepInPlugin(MODNAME, MODNAME, "1.3.0")]
     [BepInProcess("GTFO.exe")]
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    public class EntryPoint : BasePlugin
+    [BepInDependency(MTFO_Wrapper.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(PartialData_Wrapper.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    internal sealed class EntryPoint : BasePlugin
     {
-        public static bool StairsFixed = false;
-        public static bool TechFixed = false;
-        public static bool ServiceFixed = false;
-        public static bool SamDBExitFixed = false;
-        public static List<string> CustomMarkerPrefabs = new();
+        public const string MODNAME = "LGTuner";
 
         public override void Load()
         {
-            HarmonyInstance = new Harmony("LGTuner");
-            HarmonyInstance.PatchAll();
+            new Harmony("LGTuner").PatchAll();
             ConfigManager.Init();
+            ConfigManager.Prepare(Config);
+            Logger.Info("LGTuner is done loading!");
         }
-
-        public Harmony HarmonyInstance { get; private set; }
     }
 }
+// todo - refactor for patch classes
+// todo - move geo fixes to own holder
+// todo - custom converter for layout config to read as json array or object

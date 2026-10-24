@@ -1,7 +1,9 @@
-﻿using Expedition;
+﻿using AssetShards;
+using Expedition;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
+using LGTuner.Extensions;
 using UnityEngine;
 using Random = System.Random;
 
@@ -90,12 +92,12 @@ namespace LGTuner.Inject
                     }
                     else
                     {
-                        hasGate = rnd.NextFloat() >= overrideData.PlugWithNoGateChance;
+                        hasGate = rnd.NextFloat01() >= overrideData.PlugWithNoGateChance;
                     }
                 }
 
                 var dropHeight = GetDropHeight(plug);
-                var newPlug = BuilderInfo.GetRandomPlug(rnd.NextUint(), dropHeight, GetSubComplexOfPlug(plug), hasGate);
+                var newPlug = BuilderInfo.GetRandomPlug(rnd.NextUInt(), dropHeight, GetSubComplexOfPlug(plug), hasGate);
                 if (newPlug == null)
                 {
                     Logger.Error($"Plug was null! - Height: {dropHeight}");
@@ -120,11 +122,31 @@ namespace LGTuner.Inject
         {
             if (string.IsNullOrEmpty(prefabPath))
             {
-                prefab = null;
+                prefab = null!;
                 return false;
             }
 
-            prefab = AssetAPI.GetLoadedAsset(prefabPath)?.Cast<GameObject>();
+            //if (EntryPoint.BundleLookup.ContainsKey(prefabPath.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(prefabPath.ToUpperInvariant()))
+            //    foreach (var b in EntryPoint.BundleLookup)
+            //    {
+            //        if (b.Key == prefabPath.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+            //        {
+            //            Logger.Info($"loading bundle asset prefab {prefabPath.ToUpperInvariant()}");
+            //            UnityEngine.Object asset = b.Value.LoadAsset(prefabPath.ToUpperInvariant());
+            //            try { AssetShardManager.s_loadedAssetsLookup.Add(prefabPath.ToUpperInvariant(), asset); } catch { }
+            //        }
+            //        if (b.Key == prefabPath.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+            //        {
+            //            Logger.Info($"loading all assets from bundle {b.Value}");
+            //            foreach (var a in b.Value.GetAllAssetNames())
+            //            {
+            //                UnityEngine.Object asset = b.Value.LoadAsset(a);
+            //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+            //            }
+            //        }
+            //    }
+
+            prefab = AssetAPI.GetLoadedAsset(prefabPath)?.Cast<GameObject>()!;
             return prefab != null;
         }
 
@@ -143,7 +165,7 @@ namespace LGTuner.Inject
         [HarmonyWrapSafe]
         private static bool Prefix(LG_BuildPlugJob __instance)
         {
-            GameObject prefab = null;
+            GameObject prefab = null!;
             var plug = __instance.m_plug;
             Logger.Info($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
             if (plug.ExpanderStatus == LG_ZoneExpanderStatus.Connected) return true;
@@ -206,9 +228,29 @@ namespace LGTuner.Inject
         {
             if (string.IsNullOrEmpty(prefabPath))
             {
-                prefab = null;
+                prefab = null!;
                 return false;
             }
+
+            //if (EntryPoint.BundleLookup.ContainsKey(prefabPath.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(prefabPath.ToUpperInvariant()))
+            //    foreach (var b in EntryPoint.BundleLookup)
+            //    {
+            //        if (b.Key == prefabPath.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+            //        {
+            //            Logger.Info($"loading bundle asset prefab {prefabPath.ToUpperInvariant()}");
+            //            UnityEngine.Object asset = b.Value.LoadAsset(prefabPath.ToUpperInvariant());
+            //            try { AssetShardManager.s_loadedAssetsLookup.Add(prefabPath.ToUpperInvariant(), asset); } catch { }
+            //        }
+            //        if (b.Key == prefabPath.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+            //        {
+            //            Logger.Info($"loading all assets from bundle {b.Value}");
+            //            foreach (var a in b.Value.GetAllAssetNames())
+            //            {
+            //                UnityEngine.Object asset = b.Value.LoadAsset(a);
+            //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+            //            }
+            //        }
+            //    }
 
             prefab = AssetAPI.GetLoadedAsset(prefabPath).Cast<GameObject>();
             return prefab != null;

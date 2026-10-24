@@ -4,7 +4,6 @@ using Expedition;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
-using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -21,14 +20,14 @@ namespace LGTuner.Inject
                 return;
 
             // fix assets
-            if (!IL2CPPChainloader.Instance.Plugins.TryGetValue("StairsFix", out var asdasdasdinfo) && !EntryPoint.StairsFixed)
-            {
-                var go = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Dimensions/Desert/Dimension_Desert_Mining_Shaft.prefab");
-                var ladders = go.GetComponentsInChildren<LG_Ladder>();
-                ladders[2].gameObject.transform.position += new Vector3(0f, 0f, -1.5f);
-                Logger.Info("navmesh fix on Dimension_Desert_Mining_Shaft.prefab (StairsFix) done");
-                EntryPoint.StairsFixed = true;
-            }
+            //if (!IL2CPPChainloader.Instance.Plugins.TryGetValue("StairsFix", out var asdasdasdinfo) && !EntryPoint.StairsFixed)
+            //{
+            //    var go = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Dimensions/Desert/Dimension_Desert_Mining_Shaft.prefab");
+            //    var ladders = go.GetComponentsInChildren<LG_Ladder>();
+            //    ladders[2].gameObject.transform.position += new Vector3(0f, 0f, -1.5f);
+            //    Logger.Info("navmesh fix on Dimension_Desert_Mining_Shaft.prefab (StairsFix) done");
+            //    //EntryPoint.StairsFixed = true;
+            //}
 
 
             foreach (var complex in BuilderInfo.ExtraComplexResourceToLoad)

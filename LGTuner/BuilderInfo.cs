@@ -1,12 +1,9 @@
-﻿using Expedition;
+﻿using AmorLib.Utils;
+using Expedition;
 using GameData;
-using GTFO.API.JSON;
 using LevelGeneration;
 using LGTuner.Configs;
 using LGTuner.Manager;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace LGTuner
@@ -16,16 +13,14 @@ namespace LGTuner
         public static IEnumerable<Complex> ExtraComplexResourceToLoad => _extraComplexResourceToLoad;
         private static readonly List<Complex> _extraComplexResourceToLoad = new();
 
-        public static ComplexResourceSetDataBlock ComplexResourceSet { get; private set; }
+        public static ComplexResourceSetDataBlock ComplexResourceSet { get; private set; } = null!;
         public static int GridSize { get; private set; }
         public static int GridCenter { get; private set; }
         public static int GridZeroOffset { get; private set; }
         public static float AltitudeOffset { get; private set; }
-
-
-        public static LayoutConfig MainLayer { get; private set; }
-        public static LayoutConfig SecondaryLayer { get; private set; }
-        public static LayoutConfig ThirdLayer { get; private set; }
+        public static LayoutConfig MainLayer { get; private set; } = null!;
+        public static LayoutConfig SecondaryLayer { get; private set; } = null!;
+        public static LayoutConfig ThirdLayer { get; private set; } = null!;
         public static LayoutConfig[] DimensionLayer { get; private set; } = Array.Empty<LayoutConfig>();
 
         internal static void OnResourceSetSelected()
@@ -35,12 +30,11 @@ namespace LGTuner
             GridCenter = GridSize / 2;
             GridZeroOffset = -GridCenter;
             AltitudeOffset = ComplexResourceSet.LevelGenConfig.AltitudeOffset;
-
-            MainLayer = null;
-            SecondaryLayer = null;
-            ThirdLayer = null;
+            
+            MainLayer = null!;
+            SecondaryLayer = null!;
+            ThirdLayer = null!;
             DimensionLayer = new LayoutConfig[Enum.GetValues(typeof(eDimensionIndex)).Length];
-
             _extraComplexResourceToLoad.Clear();
 
             var activeExp = RundownManager.ActiveExpedition;
@@ -55,13 +49,12 @@ namespace LGTuner
 
             foreach (var dim in Builder.CurrentFloor.m_dimensions)
             {
-                if (dim.IsMainDimension || dim.DimensionData.IsStaticDimension)
+                if (dim.IsMainDimension || dim.IsArenaDimension || dim.DimensionData.IsStaticDimension)
                     continue;
 
-                var layout = LevelLayoutDataBlock.GetBlock(dim.DimensionData.LevelLayoutData);
-                if (layout != null && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
+                if (DataBlockUtil.TryGetBlock<LevelLayoutDataBlock>(dim.DimensionData.LevelLayoutData, out var layout) && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
                 {
-                    Logger.Info("loysimme dimension ja levellayoutin");
+                    Logger.Debug("loysimme dimension ja levellayoutin");
                     dimLayer.Reset(dim.Grid.m_sizeX);
                     DimensionLayer[(int)dim.DimensionIndex] = dimLayer;
                 }
@@ -70,14 +63,13 @@ namespace LGTuner
             MainLayer?.Reset(GridSize);
             SecondaryLayer?.Reset(GridSize);
             ThirdLayer?.Reset(GridSize);
-
             AddExtraShard(MainLayer);
             AddExtraShard(SecondaryLayer);
             AddExtraShard(ThirdLayer);
             Array.ForEach(DimensionLayer, x => AddExtraShard(x));
         }
 
-        private static void AddExtraShard(LayoutConfig layerConfig)
+        private static void AddExtraShard(LayoutConfig? layerConfig)
         {
             if (layerConfig == null)
                 return;
@@ -93,8 +85,8 @@ namespace LGTuner
         {
             if (!Dimension.GetDimension(zone.DimensionIndex, out var dimension))
             {
-                Logger.Info("dimension getter failed");
-                config = null;
+                Logger.Error("dimension getter failed");
+                config = null!;
                 return false;
             }
 
@@ -125,7 +117,7 @@ namespace LGTuner
                     var layout = LevelLayoutDataBlock.GetBlock(dim.DimensionData.LevelLayoutData);
                     if (layout != null && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
                     {
-                        Logger.Info("found a dimension + levellayout");
+                        Logger.Debug("found a dimension + levellayout");
                         dimLayer.Reset(dim.Grid.m_sizeX);
                         DimensionLayer[(int)dim.DimensionIndex] = dimLayer;
                     }
@@ -134,7 +126,7 @@ namespace LGTuner
                 return config != null;
             }
 
-            config = null;
+            config = null!;
             return false;
         }
 
@@ -146,14 +138,13 @@ namespace LGTuner
                 0 => res.GetRandomPrefab(seed, withGate ? res.m_straightPlugsWithGates : res.m_straightPlugsNoGates, subcomplex),
                 1 => res.GetRandomPrefab(seed, withGate ? res.m_singleDropPlugsWithGates : res.m_singleDropPlugsNoGates, subcomplex),
                 2 => res.GetRandomPrefab(seed, withGate ? res.m_doubleDropPlugsWithGates : res.m_doubleDropPlugsNoGates, subcomplex),
-                _ => null,
+                _ => null!,
             };
         }
 
         public static uint GetLayoutIdOfZone(LG_Zone zone)
         {
             var dimension = zone.Dimension;
-
             uint levelLayout;
             if (dimension.IsMainDimension)
             {
@@ -171,7 +162,6 @@ namespace LGTuner
             {
                 levelLayout = dimension.DimensionData.LevelLayoutData;
             }
-
             return levelLayout;
         }
     }

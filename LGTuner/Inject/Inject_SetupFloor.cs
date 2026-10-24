@@ -19,59 +19,59 @@ namespace LGTuner.Inject
         [HarmonyPrefix]
         private static bool Prefix(LG_SetupFloor __instance, ref bool __result)
         {
-            /// shardit ladattu
+            ///// shardit ladattu
 
-            foreach (var m in AssetShardManager.s_loadedManifests)
-            {
-                if (m.Key.Contains("Complex_Service") && !EntryPoint.ServiceFixed)
-                {
-                    EntryPoint.ServiceFixed = true;
-                    var go1 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01_R8D1.prefab");
-                    if (go1 != null)
-                    {
-                        foreach (var tra in go1.GetComponentsInChildren<Transform>())
-                        {
-                            if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
-                        }
-                        Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01_R8D1.prefab done");
-                    }
+            //foreach (var m in AssetShardManager.s_loadedManifests)
+            //{
+            //    if (m.Key.Contains("Complex_Service") && !EntryPoint.ServiceFixed)
+            //    {
+            //        EntryPoint.ServiceFixed = true;
+            //        var go1 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01_R8D1.prefab");
+            //        if (go1 != null)
+            //        {
+            //            foreach (var tra in go1.GetComponentsInChildren<Transform>())
+            //            {
+            //                if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
+            //            }
+            //            Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01_R8D1.prefab done");
+            //        }
 
-                    var go2 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01.prefab");
-                    if (go2 != null)
-                    {
-                        foreach (var tra in go2.GetComponentsInChildren<Transform>())
-                        {
-                            if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
-                        }
-                        Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
-                    }
-                }
-                if (m.Key.Contains("Complex_Tech") && !EntryPoint.TechFixed)
-                {
-                    var go3 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Tech/Geomorphs/geo_64x64_tech_lab_HA_05.prefab");
-                    if (go3 != null)
-                    {
-                        var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
-                        foreach (var c in caps)
-                        {
-                            if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
-                            {
-                                var p = c.m_prefab;
-                                foreach (var g in p.GetComponentsInChildren<Transform>())
-                                    if (g.name == "Capsulecollider")
-                                        g.transform.localScale = new(0.5f, 1, 0.5f);
-                            }
-                        }
-                        Logger.Info("collider fixes on geo_64x64_tech_lab_HA_05.prefab done");
-                    }
-                    EntryPoint.TechFixed = true;
-                }
-            }
+            //        var go2 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Service/Geomorphs/Maintenance/geo_64x64_service_floodways_hub_SF_01.prefab");
+            //        if (go2 != null)
+            //        {
+            //            foreach (var tra in go2.GetComponentsInChildren<Transform>())
+            //            {
+            //                if (tra.name == "AIGraphSource") tra.position = new(5, 2, -16);
+            //            }
+            //            Logger.Info("navmesh fix on geo_64x64_service_floodways_hub_SF_01.prefab done");
+            //        }
+            //    }
+            //    if (m.Key.Contains("Complex_Tech") && !EntryPoint.TechFixed)
+            //    {
+            //        var go3 = AssetAPI.GetLoadedAsset<GameObject>("Assets/AssetPrefabs/Complex/Tech/Geomorphs/geo_64x64_tech_lab_HA_05.prefab");
+            //        if (go3 != null)
+            //        {
+            //            var caps = go3.GetComponentsInChildren<LG_PrefabSpawner>();
+            //            foreach (var c in caps)
+            //            {
+            //                if (c.transform.name.Contains("prop_generic_duct_d_2m_tile_001"))
+            //                {
+            //                    var p = c.m_prefab;
+            //                    foreach (var g in p.GetComponentsInChildren<Transform>())
+            //                        if (g.name == "Capsulecollider")
+            //                            g.transform.localScale = new(0.5f, 1, 0.5f);
+            //                }
+            //            }
+            //            Logger.Info("collider fixes on geo_64x64_tech_lab_HA_05.prefab done");
+            //        }
+            //        EntryPoint.TechFixed = true;
+            //    }
+            //}
 
 
-            LayoutConfig MainLayer = null;
+            LayoutConfig MainLayer = null!;
             Debug.Log(Deb.LG("LG_SetupFloor.Build"));
-            GameObject gameObject = null;
+            GameObject gameObject = null!;
             SubComplex subcomplex = SubComplex.All;
             uint x = 0u;
             if (Builder.LayerBuildDatas[0].m_zoneBuildDatas != null && Builder.LayerBuildDatas[0].m_zoneBuildDatas.Count > 0)
@@ -83,7 +83,7 @@ namespace LGTuner.Inject
             XXHashSequence xXHashSequence = new XXHashSequence(__instance.m_rnd.Seed.SubSeed(x));
 
             var activeExp = RundownManager.ActiveExpedition;
-            ConfigManager.TryGetConfig(activeExp.LevelLayoutData, out MainLayer);
+            ConfigManager.TryGetConfig(activeExp.LevelLayoutData, out MainLayer!);
             if (MainLayer == null) return true;
 
             LG_GridPosition normalPos = new() { x = 0, z = 0 };
@@ -92,7 +92,28 @@ namespace LGTuner.Inject
 
             if (!string.IsNullOrEmpty(MainLayer.TileOverrides[0].Geomorph))
             {
-                gameObject = AssetAPI.GetLoadedAsset(MainLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>();
+                //if (EntryPoint.BundleLookup.ContainsKey(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant()))
+                //    foreach (var b in EntryPoint.BundleLookup)
+                //    {
+                //        if (b.Key == MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                //        {
+                //            Logger.Info($"loading bundle asset prefab {MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant()}");
+                //            UnityEngine.Object asset = b.Value.LoadAsset(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant());
+                //            try { AssetShardManager.s_loadedAssetsLookup.Add(MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant(), asset); } catch { }
+                //        }
+                //        if (b.Key == MainLayer.TileOverrides[0].Geomorph.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
+                //        {
+                //            Logger.Info($"loading all assets from bundle {b.Value.name}");
+                //            foreach (var a in b.Value.GetAllAssetNames())
+                //            {
+                //                UnityEngine.Object asset = b.Value.LoadAsset(a);
+                //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
+                //            }
+                //        }
+                //    }
+
+
+                gameObject = AssetAPI.GetLoadedAsset(MainLayer.TileOverrides[0].Geomorph)?.Cast<GameObject>()!;
                 if (gameObject == null)
                 {
                     Logger.Info("LGTuner failed to override elevator!");

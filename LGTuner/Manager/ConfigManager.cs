@@ -1,130 +1,121 @@
-﻿using GTFO.API.Utilities;
+﻿using AmorLib.Dependencies;
+using AmorLib.Utils.Extensions;
+using BepInEx;
+using GTFO.API.Utilities;
 using LGTuner.Configs;
 using LGTuner.Utils;
-using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LGTuner.Manager
 {
-    public static class ConfigManager
+    public static partial class ConfigManager
     {
-        public static IEnumerable<LayoutConfig> Layouts => _layouts;
-        private static readonly List<LayoutConfig> _layouts = new();
-        private static readonly Dictionary<uint, LayoutConfig> _lookup = new();
-        private static readonly Dictionary<string, LayoutConfig> _fileNameLookup = new();
+        private static readonly Dictionary<string, HashSet<uint>> _lookups = new();
+        private static readonly Dictionary<uint, LayoutConfig> _layouts = new();
 
-        public static void Init()
+        internal static void Init()
         {
-            if (!MTFOUtil.HasCustomContent)
-                return;
-
-            var configPath = Path.Combine(MTFOUtil.CustomPath, "LGTuner");
-            var dir = Directory.CreateDirectory(configPath);
-
-            foreach (var fileInfo in dir.GetFiles())
+            /* --- remove legacy bundle file extension --- */
+            IEnumerable<string> bundlePaths = new string[]
             {
-                var extension = fileInfo.Extension;
-                var isJson = extension.Equals(".json", StringComparison.InvariantCultureIgnoreCase);
-                var isJsonc = extension.Equals(".jsonc", StringComparison.InvariantCultureIgnoreCase);
+                Path.Combine(Paths.BepInExRootPath, "Assets", "AssetBundles"),
+                Path.Combine(Paths.ConfigPath, "Assets", "AssetBundles")
+            }.Where(Directory.Exists).SelectMany(dir => Directory.GetFiles(dir, "*", SearchOption.AllDirectories));
 
-                if (isJson || isJsonc)
-                {
-                    var json = File.ReadAllText(fileInfo.FullName);
-                    var data = JSON.Deserialize<LayoutConfig>(json);
-                    if (_lookup.ContainsKey(data.LevelLayoutID))
-                    {
-                        Logger.Error($"Duplicated ID found!: {fileInfo.Name}, {data.LevelLayoutID}");
-                        continue;
-                    }
-
-                    _layouts.Add(data);
-                    _lookup.Add(data.LevelLayoutID, data);
-                    _fileNameLookup.Add(fileInfo.Name.ToLowerInvariant(), data);
-                }
-            }
-
-            //LG_Factory.add_OnFactoryBuildDone(new Action(DumpLevel));
-
-            var liveEdit = LiveEdit.CreateListener(configPath, "*.*", true);
-            liveEdit.FileChanged += LiveEdit_FileChanged;
-            liveEdit.FileCreated += LiveEdit_FileChanged;
-            liveEdit.StartListen();
-        }
-
-        private static void LiveEdit_FileChanged(LiveEditEventArgs e)
-        {
-            var key = Path.GetFileName(e.FullPath).ToLowerInvariant();
-            var extension = Path.GetExtension(e.FullPath);
-            if (extension.Equals(".json", StringComparison.InvariantCulture) ||
-                extension.Equals(".jsonc", StringComparison.InvariantCulture))
+            string suffix = ".fdfd.manifest";
+            foreach (string path in bundlePaths) 
             {
-                Logger.Error($"File Edited: '{key}' '{e.FullPath}'");
+                if (!path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string newPath = path.Substring(0, path.Length - suffix.Length);
+                if (string.IsNullOrEmpty(Path.GetFileName(newPath)) || File.Exists(newPath))
+                    continue;
 
                 try
                 {
-                    uint oldID = 0;
-                    bool newfile = false;
-                    LayoutConfig data = null;
-                    if (_fileNameLookup.ContainsKey(key)) data = _fileNameLookup[key];
-                    if (data == null) newfile = true;
-                    if (data != null) oldID = data.LevelLayoutID;
-
-                    LiveEdit.TryReadFileContent(e.FullPath, (json) =>
-                    {
-                        try
-                        {
-                            var newData = JSON.Deserialize<LayoutConfig>(json);
-                            if (oldID > 0) newData.LevelLayoutID = oldID;
-                            if (oldID == 0) oldID = newData.LevelLayoutID;
-
-                            if (newfile)
-                            {
-                                if (_fileNameLookup.ContainsKey(key)) _fileNameLookup.Remove(key);
-                                //_fileNameLookup.Add(key, newData);
-                                LayoutConfig toremove = null;
-                                foreach (var l in _layouts) if (l.LevelLayoutID == newData.LevelLayoutID) toremove = l;
-                                if (toremove != null) _layouts.Remove(toremove);
-                                if (_lookup.ContainsKey(oldID)) _lookup.Remove(oldID);
-                            }
-
-                            if (!newfile)
-                            {
-                                _fileNameLookup.Remove(key);
-                                _lookup.Remove(oldID);
-                                _layouts.Remove(data);
-                            }
-
-                            _layouts.Add(newData);
-                            _lookup.Add(oldID, newData);
-                            _fileNameLookup.Add(key, newData);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error($"Error while reading or inserting LGTuner Config: {ex}");
-                        }
-                    });
+                    Logger.Message($"Renaming file to '{newPath}'");
+                    File.Move(path, newPath);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Error while reading LGTuner Config: {ex}");
+                    Logger.Error($"Failed to rename '{path}' to '{newPath}':\n{ex.Message}");
                 }
+            }
+
+            /* --- load mtfo custom data --- */
+            if (!MTFO_Wrapper.IsLoaded || !MTFO_Wrapper.HasCustomContent)
+                return;
+
+            string modulePath = Path.Combine(MTFO_Wrapper.CustomPath, EntryPoint.MODNAME);
+            string[] ext = new[] { "*.json", "*.jsonc" };
+            foreach (string customFile in Directory.EnumerateFiles(modulePath, "*", SearchOption.AllDirectories).Where(f => ext.Contains("*" + Path.GetExtension(f), StringComparer.OrdinalIgnoreCase)))
+            {
+                try
+                {
+                    string content = File.ReadAllText(customFile);
+                    ReadFileContent(customFile, content);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Error reading file {customFile}:\n{ex.Message}");
+                }
+            }
+
+            var sfsw = SafeFileSystemWatcher.Create(modulePath, ext, true);
+            sfsw.OnCreated += FileCreatedOrChanged;
+            sfsw.OnChanged += FileCreatedOrChanged;
+            sfsw.OnDeleted += FileDeleted;
+            sfsw.OnRenamed += FileRenamed;
+        }
+
+        private static void ReadFileContent(string file, string content) 
+        {
+            var layoutSet = _lookups.GetOrAddNew(file);
+            foreach (uint id in layoutSet)
+            {
+                _layouts.Remove(id);
+            }
+            layoutSet.Clear();
+
+            var data = JSON.Deserialize<LayoutConfig>(content);
+            if (data != null && data.LevelLayoutID != 0u)
+            {
+                layoutSet.Add(data.LevelLayoutID);
+                _layouts[data.LevelLayoutID] = data;
             }
         }
 
-        private static void DumpLevel()
+        private static void FileCreatedOrChanged(FileEventArgs e)
         {
-
+            Logger.Warn($"LiveEdit file updated: {e.FullPath}");
+            ReadFileContent(e.FullPath, e.ReadContent());
         }
 
-        private static void DumpLayerToConfig()
+        private static void FileDeleted(FileEventArgs e)
         {
-
+            Logger.Warn($"LiveEdit file deleted: {e.FullPath}");
+            foreach (uint id in _lookups[e.FullPath])
+            {
+                _layouts.Remove(id);
+            }
+            _lookups.Remove(e.FullPath);
         }
 
-        public static bool TryGetConfig(uint layoutID, out LayoutConfig config)
+        private static void FileRenamed(FileRenamedEventArgs e)
         {
-            return _lookup.TryGetValue(layoutID, out config);
+           (string oldPath, string path) = (e.OldFullPath, e.FullPath);
+            Logger.Warn($"LiveEdit file renamed: {path}");
+            if (_lookups.TryGetValue(oldPath, out var idSet))
+            {
+                _lookups[path] = _lookups[oldPath];
+                _lookups.Remove(oldPath);
+            }
+        }
+
+        public static bool TryGetConfig(uint layoutID, [MaybeNullWhen(false)] out LayoutConfig config)
+        {
+            return _layouts.TryGetValue(layoutID, out config);
         }
     }
 }
