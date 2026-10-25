@@ -24,6 +24,5 @@ namespace LGTuner
         }
     }
 }
-// todo - refactor for patch classes
 // todo - move geo fixes to own holder
 // todo - custom converter for layout config to read as json array or object

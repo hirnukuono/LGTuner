@@ -40,10 +40,8 @@ namespace LGTuner
             var activeExp = RundownManager.ActiveExpedition;
             if (ConfigManager.TryGetConfig(activeExp.LevelLayoutData, out var mainLayer))
                 MainLayer = mainLayer;
-
             if (activeExp.SecondaryLayerEnabled && ConfigManager.TryGetConfig(activeExp.SecondaryLayout, out var secLayer))
                 SecondaryLayer = secLayer;
-
             if (activeExp.ThirdLayerEnabled && ConfigManager.TryGetConfig(activeExp.ThirdLayout, out var thirdLayer))
                 ThirdLayer = thirdLayer;
 
@@ -111,11 +109,10 @@ namespace LGTuner
             {
                 foreach (var dim in Builder.CurrentFloor.m_dimensions)
                 {
-                    if (dim.IsMainDimension || dim.DimensionData.IsStaticDimension)
+                    if (dim.IsMainDimension || dim.DimensionData.IsStaticDimension || dim.IsArenaDimension)
                         continue;
 
-                    var layout = LevelLayoutDataBlock.GetBlock(dim.DimensionData.LevelLayoutData);
-                    if (layout != null && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
+                    if (DataBlockUtil.TryGetBlock<LevelLayoutDataBlock>(dim.DimensionData.LevelLayoutData, out var layoutBlock) && ConfigManager.TryGetConfig(layoutBlock.persistentID, out var dimLayer))
                     {
                         Logger.Debug("found a dimension + levellayout");
                         dimLayer.Reset(dim.Grid.m_sizeX);

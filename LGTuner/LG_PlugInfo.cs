@@ -1,7 +1,6 @@
 ﻿using LevelGeneration;
 using LGTuner.Extensions;
 using UnityEngine;
-using Random = System.Random;
 
 namespace LGTuner
 {
@@ -149,7 +148,7 @@ namespace LGTuner
 
             if (rotate == RotateType.Towards_Random)
             {
-                var nextIndex = new Random(seed.ToSeed()).Next(4);
+                var nextIndex = new System.Random(seed.ToSeed()).Next(4);
                 rotate = nextIndex switch
                 {
                     0 => RotateType.Towards_Forward,

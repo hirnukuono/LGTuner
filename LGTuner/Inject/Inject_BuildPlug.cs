@@ -1,260 +1,141 @@
-﻿using AssetShards;
-using Expedition;
+﻿using Expedition;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
 using LGTuner.Extensions;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
-using Random = System.Random;
 
 namespace LGTuner.Inject
 {
-    [HarmonyPatch(typeof(LG_BuildPlugBaseJob), nameof(LG_BuildPlugBaseJob.SpawnPlug))]
+    [HarmonyPatch]
     internal static class Inject_BuildPlug
     {
-        private static void Prefix(LG_Plug plug, ref GameObject prefab)
+        [HarmonyPatch(typeof(LG_BuildPlugBaseJob), nameof(LG_BuildPlugBaseJob.SpawnPlug))]
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.HigherThanNormal)]
+        [HarmonyWrapSafe]
+        private static void Pre_SpawnPlug(LG_Plug plug, ref GameObject prefab)
         {
-            Logger.Info($"found plug for zone: {plug.m_linksFrom.m_zone.LocalIndex}{plug.m_linksFrom.name}->{plug.m_linksTo.m_zone.LocalIndex}{plug.m_linksTo.name}");
-
+            Logger.Debug($"found plug for zone: {plug.m_linksFrom.m_zone.LocalIndex}{plug.m_linksFrom.name}->{plug.m_linksTo.m_zone.LocalIndex}{plug.m_linksTo.name}");
             if (!BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))
                 return;
-
             var normalGrid = plug.m_linksFrom.m_geomorph.m_tile.m_shape.m_gridPosition.GetNormal(config.GridSize);
             if (!config.TryGetTileData(normalGrid, out var overrideData))
                 return;
-
-            if (overrideData.ZoneData?.OverridePlugs ?? false)
+            if (overrideData.ZoneData?.OverridePlugs == true && TryGetPlugPrefab(overrideData.ZoneData.GetNextPlug(), out var newPrefab))
             {
-                if (TryGetPlugPrefab(overrideData.ZoneData.GetNextPlug(), out var newPrefab))
-                {
-                    Logger.Info($" - Prefab Replaced by Zone OverridePlugs! {newPrefab.name}");
-                    prefab = newPrefab;
-                }
+                Logger.Info($" - Prefab Replaced by Zone OverridePlugs! {newPrefab.name}");
+                prefab = newPrefab;
             }
 
-            switch (plug.m_dir)
+            string prefabPath = plug.m_dir switch
             {
-                case LG_PlugDir.Up:
-                    if (TryGetPlugPrefab(overrideData.BackwardPlug, out var newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by BackwardPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                        return;
-                    }
-                    break;
-
-                case LG_PlugDir.Down:
-                    if (TryGetPlugPrefab(overrideData.ForwardPlug, out newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by ForwardPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                        return;
-                    }
-                    break;
-
-                case LG_PlugDir.Left:
-                    if (TryGetPlugPrefab(overrideData.LeftPlug, out newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by LeftPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                        return;
-                    }
-                    break;
-
-                case LG_PlugDir.Right:
-                    if (TryGetPlugPrefab(overrideData.RightPlug, out newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by RightPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                        return;
-                    }
-                    break;
+                LG_PlugDir.Up => overrideData.BackwardPlug,
+                LG_PlugDir.Down => overrideData.ForwardPlug,
+                LG_PlugDir.Left => overrideData.LeftPlug,
+                LG_PlugDir.Right => overrideData.RightPlug,
+                _ => string.Empty
+            };
+            if (TryGetPlugPrefab(prefabPath, out newPrefab))
+            {
+                Logger.Info($" - Prefab replaced by {plug.m_dir} plug setting! {newPrefab.name}");
+                prefab = newPrefab;
+                return;
             }
 
-            if (overrideData.OverridePlugWithNoGateChance)
+            if (!overrideData.OverridePlugWithNoGateChance)
+                return;
+            
+            var rnd = new System.Random(plug.m_linksFrom.AreaSeed.ToSeed());
+            bool hasGate;
+            if (plug.m_isZoneSource)
             {
-                var rnd = new Random(plug.m_linksFrom.AreaSeed.ToSeed());
-
-                bool hasGate;
-                if (plug.m_isZoneSource)
-                {
-                    hasGate = true;
-                }
-                else
-                {
-                    if (overrideData.PlugWithNoGateChance >= 1.0f)
-                    {
-                        hasGate = false;
-                    }
-                    else if (overrideData.PlugWithNoGateChance <= 0.0f)
-                    {
-                        hasGate = true;
-                    }
-                    else
-                    {
-                        hasGate = rnd.NextFloat01() >= overrideData.PlugWithNoGateChance;
-                    }
-                }
-
-                var dropHeight = GetDropHeight(plug);
-                var newPlug = BuilderInfo.GetRandomPlug(rnd.NextUInt(), dropHeight, GetSubComplexOfPlug(plug), hasGate);
-                if (newPlug == null)
-                {
-                    Logger.Error($"Plug was null! - Height: {dropHeight}");
-                    return;
-                }
-
-                prefab = newPlug;
+                hasGate = true;
             }
+            else if (overrideData.PlugWithNoGateChance >= 1.0f)
+            {
+                hasGate = false;
+            }
+            else if (overrideData.PlugWithNoGateChance <= 0.0f)
+            {
+                hasGate = true;
+            }
+            else
+            {
+                hasGate = rnd.NextFloat01() >= overrideData.PlugWithNoGateChance;
+            }
+
+            int dropHeight = GetDropHeight(plug);
+            var newPlug = BuilderInfo.GetRandomPlug(rnd.NextUInt(), dropHeight, GetSubComplexOfPlug(plug), hasGate);
+            if (newPlug == null)
+            {
+                Logger.Error($"Plug was null! - Height: {dropHeight}");
+                return;
+            }
+            prefab = newPlug;
+        }
+
+        [HarmonyPatch(typeof(LG_BuildPlugJob), nameof(LG_BuildPlugJob.Build))]
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.HigherThanNormal)]
+        [HarmonyWrapSafe]
+        private static bool Pre_BuildPlug(LG_BuildPlugJob __instance)
+        {
+            var plug = __instance.m_plug;
+            Logger.Debug($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
+            if (plug.ExpanderStatus == LG_ZoneExpanderStatus.Connected || plug.m_isZoneSource || !BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))
+                return true;
+            var normalGrid = plug.m_linksFrom.m_geomorph.m_tile.m_shape.m_gridPosition.GetNormal(config.GridSize);
+            if (!config.TryGetTileData(normalGrid, out var overrideData))
+                return true;
+
+            string prefabPath = plug.m_dir switch
+            {
+                LG_PlugDir.Up => overrideData.BackwardPlug,
+                LG_PlugDir.Down => overrideData.ForwardPlug,
+                LG_PlugDir.Left => overrideData.LeftPlug,
+                LG_PlugDir.Right => overrideData.RightPlug,
+                _ => string.Empty
+            };
+
+            if (TryGetPlugPrefab(prefabPath, out var prefab))
+            {
+                Logger.Info($" - Prefab replaced by {plug.m_dir} plug setting! {prefab.name}");
+                var go = UnityEngine.Object.Instantiate(prefab, plug.transform.position, plug.transform.rotation);
+                go.transform.SetParent(plug.transform, true);
+                LG_Factory.FindAndBuildSelectorsAndSpawners(go, __instance.m_rnd.Random.NextSubSeed());
+                __instance.ProcessDivider(plug, go, false, __instance.m_rnd.Random.NextSubSeed());
+                plug.m_wasProcessed = true;
+            }
+            return true;
+        }
+
+        private static bool TryGetPlugPrefab(string prefabPath, [MaybeNullWhen(false)] out GameObject prefab)
+        {
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                prefab = null;
+                return false;
+            }
+            prefab = AssetAPI.GetLoadedAsset<GameObject>(prefabPath);
+            return prefab != null;
+        }
+        
+        private static int GetDropHeight(LG_Plug plug)
+        {
+            float plugDistance = Mathf.Abs(plug.transform.position.y - plug.m_pariedWith.transform.position.y);
+            return Mathf.RoundToInt(plugDistance / BuilderInfo.AltitudeOffset);
         }
 
         private static SubComplex GetSubComplexOfPlug(LG_Plug plug)
         {
-            var subcomplex = plug.m_subComplex;
+            SubComplex subcomplex = plug.m_subComplex;
             if (plug.m_subComplex != plug.m_pariedWith.m_subComplex)
             {
                 subcomplex = SubComplex.Plug_SubComplex_Transition;
             }
             return subcomplex;
-        }
-
-        private static bool TryGetPlugPrefab(string prefabPath, out GameObject prefab)
-        {
-            if (string.IsNullOrEmpty(prefabPath))
-            {
-                prefab = null!;
-                return false;
-            }
-
-            //if (EntryPoint.BundleLookup.ContainsKey(prefabPath.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(prefabPath.ToUpperInvariant()))
-            //    foreach (var b in EntryPoint.BundleLookup)
-            //    {
-            //        if (b.Key == prefabPath.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
-            //        {
-            //            Logger.Info($"loading bundle asset prefab {prefabPath.ToUpperInvariant()}");
-            //            UnityEngine.Object asset = b.Value.LoadAsset(prefabPath.ToUpperInvariant());
-            //            try { AssetShardManager.s_loadedAssetsLookup.Add(prefabPath.ToUpperInvariant(), asset); } catch { }
-            //        }
-            //        if (b.Key == prefabPath.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
-            //        {
-            //            Logger.Info($"loading all assets from bundle {b.Value}");
-            //            foreach (var a in b.Value.GetAllAssetNames())
-            //            {
-            //                UnityEngine.Object asset = b.Value.LoadAsset(a);
-            //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
-            //            }
-            //        }
-            //    }
-
-            prefab = AssetAPI.GetLoadedAsset(prefabPath)?.Cast<GameObject>()!;
-            return prefab != null;
-        }
-
-
-
-        private static int GetDropHeight(LG_Plug plug)
-        {
-            var plugDistance = Mathf.Abs(plug.transform.position.y - plug.m_pariedWith.transform.position.y);
-            return Mathf.RoundToInt(plugDistance / BuilderInfo.AltitudeOffset);
-        }
-    }
-
-    [HarmonyPatch(typeof(LG_BuildPlugJob), nameof(LG_BuildPlugJob.Build))]
-    class Inject_BuildPlugJob
-    {
-        [HarmonyWrapSafe]
-        private static bool Prefix(LG_BuildPlugJob __instance)
-        {
-            GameObject prefab = null!;
-            var plug = __instance.m_plug;
-            Logger.Info($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
-            if (plug.ExpanderStatus == LG_ZoneExpanderStatus.Connected) return true;
-            if (plug.m_isZoneSource) return true;
-            if (!BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))
-                return true;
-
-            var normalGrid = plug.m_linksFrom.m_geomorph.m_tile.m_shape.m_gridPosition.GetNormal(config.GridSize);
-            if (!config.TryGetTileData(normalGrid, out var overrideData))
-                return true;
-
-            switch (plug.m_dir)
-            {
-                case LG_PlugDir.Up:
-                    if (TryGetPlugPrefab(overrideData.BackwardPlug, out var newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by BackwardPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                    }
-                    break;
-
-                case LG_PlugDir.Down:
-                    if (TryGetPlugPrefab(overrideData.ForwardPlug, out newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by ForwardPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                    }
-                    break;
-
-                case LG_PlugDir.Left:
-                    if (TryGetPlugPrefab(overrideData.LeftPlug, out newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by LeftPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                    }
-                    break;
-
-                case LG_PlugDir.Right:
-                    if (TryGetPlugPrefab(overrideData.RightPlug, out newPrefab))
-                    {
-                        Logger.Info($" - Prefab Replaced by RightPlug setting! {newPrefab.name}");
-                        prefab = newPrefab;
-                    }
-                    break;
-            }
-            if (prefab != null)
-            {
-                Logger.Info($"we shall replace a cap going {plug.m_dir}");
-                var position = plug.transform.position;
-                var rotation = plug.transform.rotation;
-                GameObject gameObject = UnityEngine.Object.Instantiate(prefab, position, rotation);
-                gameObject.transform.SetParent(plug.transform, worldPositionStays: true);
-                LG_Factory.FindAndBuildSelectorsAndSpawners(gameObject, __instance.m_rnd.Random.NextSubSeed());
-                __instance.ProcessDivider(plug, gameObject, plugIsFlipped: false, __instance.m_rnd.Random.NextSubSeed());
-                plug.m_wasProcessed = true;
-            }
-            return true;
-        }
-        private static bool TryGetPlugPrefab(string prefabPath, out GameObject prefab)
-        {
-            if (string.IsNullOrEmpty(prefabPath))
-            {
-                prefab = null!;
-                return false;
-            }
-
-            //if (EntryPoint.BundleLookup.ContainsKey(prefabPath.ToUpperInvariant()) && !AssetShardManager.s_loadedAssetsLookup.ContainsKey(prefabPath.ToUpperInvariant()))
-            //    foreach (var b in EntryPoint.BundleLookup)
-            //    {
-            //        if (b.Key == prefabPath.ToUpperInvariant() && !EntryPoint.BundleLoadAllLookup.Contains(b.Value))
-            //        {
-            //            Logger.Info($"loading bundle asset prefab {prefabPath.ToUpperInvariant()}");
-            //            UnityEngine.Object asset = b.Value.LoadAsset(prefabPath.ToUpperInvariant());
-            //            try { AssetShardManager.s_loadedAssetsLookup.Add(prefabPath.ToUpperInvariant(), asset); } catch { }
-            //        }
-            //        if (b.Key == prefabPath.ToUpperInvariant() && EntryPoint.BundleLoadAllLookup.Contains(b.Value))
-            //        {
-            //            Logger.Info($"loading all assets from bundle {b.Value}");
-            //            foreach (var a in b.Value.GetAllAssetNames())
-            //            {
-            //                UnityEngine.Object asset = b.Value.LoadAsset(a);
-            //                try { AssetShardManager.s_loadedAssetsLookup.Add(a.ToUpperInvariant(), asset); } catch { }
-            //            }
-            //        }
-            //    }
-
-            prefab = AssetAPI.GetLoadedAsset(prefabPath).Cast<GameObject>();
-            return prefab != null;
-        }
-
+        }        
     }
 }
