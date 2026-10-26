@@ -8,9 +8,6 @@ namespace LGTuner.Configs
 {
     public sealed class LayoutConfig
     {
-        [JsonIgnore]
-        public static readonly LayoutConfig Empty = new();
-
         public uint LevelLayoutID { get; set; }
         public Complex[] ExtraComplexResourceToLoad { get; set; } = Array.Empty<Complex>();
         public ZoneOverrideData[] ZoneOverrides { get; set; } = Array.Empty<ZoneOverrideData>();

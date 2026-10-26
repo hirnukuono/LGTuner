@@ -8,6 +8,11 @@ namespace LGTuner.Utils
     {
         private static readonly JsonSerializerOptions _setting = JsonSerializerUtil.CreateDefaultSettings(true, PartialData_Wrapper.IsLoaded, false);
 
+        static JSON()
+        {
+            
+        }
+
         public static T Deserialize<T>(string json)
         {
             return JsonSerializer.Deserialize<T>(json, _setting)!;

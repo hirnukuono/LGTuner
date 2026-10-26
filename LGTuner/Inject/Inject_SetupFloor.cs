@@ -12,7 +12,6 @@ namespace LGTuner.Inject
     internal static class Inject_SetupFloor
     {
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static bool Pre_LG_SetupFloor_Build(LG_SetupFloor __instance, ref bool __result)
         {
@@ -25,9 +24,7 @@ namespace LGTuner.Inject
             XXHashSequence xXHashSequence = new(__instance.m_rnd.Seed.SubSeed(x));            
             if (!ConfigManager.TryGetConfig(RundownManager.ActiveExpedition.LevelLayoutData, out var config)) 
                 return true;
-            else if (config.TileOverrides.Length == 0 || config.TileOverrides[0].X != 0 || config.TileOverrides[0].Z != 0) 
-                return true;
-            else if (config.TileOverrides[0].Geomorph.IsNullOrWhiteSpace())
+            else if (config.TileOverrides.Length == 0 || config.TileOverrides[0].X != 0 || config.TileOverrides[0].Z != 0 || config.TileOverrides[0].Geomorph.IsNullOrWhiteSpace())
                 return true;
             
             var go = AssetAPI.GetLoadedAsset<GameObject>(config.TileOverrides[0].Geomorph);

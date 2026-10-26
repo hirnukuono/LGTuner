@@ -52,7 +52,7 @@ namespace LGTuner
 
                 if (DataBlockUtil.TryGetBlock<LevelLayoutDataBlock>(dim.DimensionData.LevelLayoutData, out var layout) && ConfigManager.TryGetConfig(layout.persistentID, out var dimLayer))
                 {
-                    Logger.Debug("loysimme dimension ja levellayoutin");
+                    Logger.Verbose("loysimme dimension ja levellayoutin");
                     dimLayer.Reset(dim.Grid.m_sizeX);
                     DimensionLayer[(int)dim.DimensionIndex] = dimLayer;
                 }
@@ -114,7 +114,7 @@ namespace LGTuner
 
                     if (DataBlockUtil.TryGetBlock<LevelLayoutDataBlock>(dim.DimensionData.LevelLayoutData, out var layoutBlock) && ConfigManager.TryGetConfig(layoutBlock.persistentID, out var dimLayer))
                     {
-                        Logger.Debug("found a dimension + levellayout");
+                        Logger.Verbose("found a dimension + levellayout");
                         dimLayer.Reset(dim.Grid.m_sizeX);
                         DimensionLayer[(int)dim.DimensionIndex] = dimLayer;
                     }

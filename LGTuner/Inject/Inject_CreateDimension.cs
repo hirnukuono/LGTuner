@@ -18,7 +18,6 @@ namespace LGTuner.Inject
     {
         [HarmonyPatch(typeof(LG_Floor), nameof(LG_Floor.CreateAllDimensions))]
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static bool Pre_CreateAllDim250(LG_Floor __instance, uint seed, bool skipMainDimension = true)
         {
@@ -130,7 +129,6 @@ namespace LGTuner.Inject
 
         [HarmonyPatch(typeof(LG_Floor), nameof(LG_Floor.CreateDimension))]
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static bool Pre_CreateDimension(LG_Floor __instance, uint seed, eDimensionIndex dimensionIndex, bool arenaDimension, ref DimensionData dimensionData, Vector3 position, ref int __result, int gridSize, float cellSize = 64f)
         {

@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Logging;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
@@ -25,7 +26,7 @@ namespace LGTuner.Inject
             forceAlignToVector = alignVector != Vector3.zero; // forceAlignToVector is broken, it's necessary to do 
             var gridSize = zone.Dimension.GetGridSize();
             var normalPos = tile.ToNormalGrid(gridSize);
-            Logger.Debug($"tile info: {normalPos.x} {normalPos.z} {tilePrefab.name} for {zone.LocalIndex} : {zone.DimensionIndex}");
+            Logger.Verbose($"tile info: {normalPos.x} {normalPos.z} {tilePrefab.name} for {zone.LocalIndex} : {zone.DimensionIndex}");
 
             if (!BuilderInfo.TryGetConfig(zone, out _configContext))
                 return;
@@ -65,10 +66,10 @@ namespace LGTuner.Inject
             {
                 var tileObject = __result.gameObject;
                 var plugInfo = LG_PlugInfo.BuildPlugInfo(tileObject, tileObject.transform.rotation);
-                Logger.Info($" - TRYING ROTATION! PLUG COUNT: {plugInfo.Count}");
+                Logger.Verbose($" - TRYING ROTATION! PLUG COUNT: {plugInfo.Count}", LogLevel.Message);
                 if (plugInfo.TryGetNewRotation(zone.m_subSeed, _nextRotateType, out var rotation))
                 {
-                    Logger.Info($" - Done!");
+                    Logger.Verbose(" - Done!", LogLevel.Info);
                     tileObject.transform.rotation = rotation;
                 }
                 __result.SetPlaced();
@@ -88,7 +89,7 @@ namespace LGTuner.Inject
                         if (newSeed != 0)
                         {
                             __result.m_areas[i].AreaSeed = newSeed;
-                            Logger.Info($" - new area seed: {__result.m_areas[i].m_navInfo}, {newSeed}");
+                            Logger.Debug($" - new area seed: {__result.m_areas[i].m_navInfo}, {newSeed}");
                         }
                     }
                 }
@@ -113,7 +114,6 @@ namespace LGTuner.Inject
 
         [HarmonyPatch(typeof(LG_LevelBuilder), nameof(LG_LevelBuilder.BuildFloor))]
         [HarmonyPostfix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static void Post_BuildFloor()
         {
@@ -144,7 +144,6 @@ namespace LGTuner.Inject
 
         [HarmonyPatch(typeof(LG_ZoneJob_CreateExpandFromData), nameof(LG_ZoneJob_CreateExpandFromData.Build))]
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static void Pre_ZoneJob(LG_ZoneJob_CreateExpandFromData __instance)
         {
@@ -161,7 +160,7 @@ namespace LGTuner.Inject
             if (overrideData == null || !overrideData.TryForceCustomGeoAreaAssignment) 
                 return;
 
-            Logger.Debug($" - addcustomgeomorphareas firing for {__instance.m_zone.NavInfo.ToString()}");
+            Logger.Info($" - addcustomgeomorphareas for {__instance.m_zone.NavInfo.ToString()}");
             Dictionary<LG_Area, float> listdict = new();
             foreach (var c in __instance.m_zone.m_areas)
             {
@@ -177,7 +176,7 @@ namespace LGTuner.Inject
             __instance.m_zone.m_areas.Clear();
             foreach (var kvp in finalList)
             {
-                Logger.Debug($" - addcustomgeomorphareas scoredict {kvp.Key.name} {kvp.Value}");
+                Logger.Verbose($" - addcustomgeomorphareas scoredict {kvp.Key.name} {kvp.Value}");
                 if (!__instance.m_zone.m_areas.Contains(kvp.Key)) 
                     __instance.m_zone.m_areas.Add(kvp.Key);
 
@@ -185,12 +184,12 @@ namespace LGTuner.Inject
                 {
                     if (internalGate.m_linksFrom != null && !__instance.m_zone.m_areas.Contains(internalGate.m_linksFrom))
                     {
-                        Logger.Debug($" - addcustomgeomorphareas adding m_linksFrom {internalGate.m_linksFrom.name}");
+                        Logger.Verbose($" - addcustomgeomorphareas adding m_linksFrom {internalGate.m_linksFrom.name}");
                         __instance.m_zone.m_areas.Add(internalGate.m_linksFrom);
                     }
                     if (internalGate.m_linksTo != null && !__instance.m_zone.m_areas.Contains(internalGate.m_linksTo))
                     {
-                        Logger.Debug($" - addcustomgeomorphareas adding m_linksTo {internalGate.m_linksTo.name}");
+                        Logger.Verbose($" - addcustomgeomorphareas adding m_linksTo {internalGate.m_linksTo.name}");
                         __instance.m_zone.m_areas.Add(internalGate.m_linksTo);
                     }
                 }

@@ -85,16 +85,13 @@ namespace LGTuner
             var geomorph = geoObject.GetComponent<LG_Geomorph>();
             if (geomorph == null)
                 return default;
-
             var plugs = geoObject.GetComponentsInChildren<LG_Plug>();
             if (plugs == null)
                 return default;
-
             if (plugs.Length < 1)
                 return default;
 
             var newPlugInfo = new LG_PlugInfo();
-
             foreach (var plug in plugs)
             {
                 switch (plug.m_dir)
@@ -124,11 +121,10 @@ namespace LGTuner
             var eulerAngle = rotation.eulerAngles;
             var angle = Mathf.Round(eulerAngle.y);
 
-            //Logger.Verbose($"angle: {angle}");
+            Logger.Verbose($"angle: {angle}");
 
             angle = Mathf.Repeat(angle, 360.0f);
             var index = Mathf.RoundToInt(angle / 90.0f);
-
             newPlugInfo.StartDirection = index switch
             {
                 0 => DirectionType.Forward,
@@ -137,7 +133,6 @@ namespace LGTuner
                 3 => DirectionType.Left,
                 _ => DirectionType.Unknown
             };
-
             return newPlugInfo;
         }
 

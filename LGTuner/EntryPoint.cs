@@ -17,12 +17,12 @@ namespace LGTuner
 
         public override void Load()
         {
+            Logger.Setup(Log);
+            ConfigManager.Prepare(Config);
             new Harmony("LGTuner").PatchAll();
             ConfigManager.Init();
-            ConfigManager.Prepare(Config);
             Logger.Info("LGTuner is done loading!");
         }
     }
 }
-// todo - move geo fixes to own holder
 // todo - custom converter for layout config to read as json array or object

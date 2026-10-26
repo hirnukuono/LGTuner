@@ -28,7 +28,7 @@ namespace LGTuner.Manager
                 if (!path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                string newPath = path.Substring(0, path.Length - suffix.Length);
+                string newPath = path[..^suffix.Length];
                 if (string.IsNullOrEmpty(Path.GetFileName(newPath)) || File.Exists(newPath))
                     continue;
 

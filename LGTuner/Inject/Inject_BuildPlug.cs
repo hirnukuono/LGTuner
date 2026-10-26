@@ -1,4 +1,5 @@
-﻿using Expedition;
+﻿using BepInEx;
+using Expedition;
 using GTFO.API;
 using HarmonyLib;
 using LevelGeneration;
@@ -13,11 +14,10 @@ namespace LGTuner.Inject
     {
         [HarmonyPatch(typeof(LG_BuildPlugBaseJob), nameof(LG_BuildPlugBaseJob.SpawnPlug))]
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static void Pre_SpawnPlug(LG_Plug plug, ref GameObject prefab)
         {
-            Logger.Debug($"found plug for zone: {plug.m_linksFrom.m_zone.LocalIndex}{plug.m_linksFrom.name}->{plug.m_linksTo.m_zone.LocalIndex}{plug.m_linksTo.name}");
+            Logger.Verbose($"found plug for zone: {plug.m_linksFrom.m_zone.LocalIndex}{plug.m_linksFrom.name}->{plug.m_linksTo.m_zone.LocalIndex}{plug.m_linksTo.name}");
             if (!BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))
                 return;
             var normalGrid = plug.m_linksFrom.m_geomorph.m_tile.m_shape.m_gridPosition.GetNormal(config.GridSize);
@@ -25,7 +25,7 @@ namespace LGTuner.Inject
                 return;
             if (overrideData.ZoneData?.OverridePlugs == true && TryGetPlugPrefab(overrideData.ZoneData.GetNextPlug(), out var newPrefab))
             {
-                Logger.Info($" - Prefab Replaced by Zone OverridePlugs! {newPrefab.name}");
+                Logger.Info($" - Prefab replaced by zone OverridePlugs! '{newPrefab.name}'");
                 prefab = newPrefab;
             }
 
@@ -39,7 +39,7 @@ namespace LGTuner.Inject
             };
             if (TryGetPlugPrefab(prefabPath, out newPrefab))
             {
-                Logger.Info($" - Prefab replaced by {plug.m_dir} plug setting! {newPrefab.name}");
+                Logger.Info($" - Prefab replaced by {plug.m_dir} plug setting! '{newPrefab.name}'");
                 prefab = newPrefab;
                 return;
             }
@@ -78,12 +78,11 @@ namespace LGTuner.Inject
 
         [HarmonyPatch(typeof(LG_BuildPlugJob), nameof(LG_BuildPlugJob.Build))]
         [HarmonyPrefix]
-        [HarmonyPriority(Priority.HigherThanNormal)]
         [HarmonyWrapSafe]
         private static bool Pre_BuildPlug(LG_BuildPlugJob __instance)
         {
             var plug = __instance.m_plug;
-            Logger.Debug($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
+            Logger.Verbose($"buildplugjob plug in complex {plug.m_subComplex} plug status {plug.ExpanderStatus} plug direction {plug.m_dir} ..");
             if (plug.ExpanderStatus == LG_ZoneExpanderStatus.Connected || plug.m_isZoneSource || !BuilderInfo.TryGetConfig(plug.m_linksFrom.m_zone, out var config))
                 return true;
             var normalGrid = plug.m_linksFrom.m_geomorph.m_tile.m_shape.m_gridPosition.GetNormal(config.GridSize);
@@ -98,10 +97,9 @@ namespace LGTuner.Inject
                 LG_PlugDir.Right => overrideData.RightPlug,
                 _ => string.Empty
             };
-
             if (TryGetPlugPrefab(prefabPath, out var prefab))
             {
-                Logger.Info($" - Prefab replaced by {plug.m_dir} plug setting! {prefab.name}");
+                Logger.Info($" - Prefab replaced by {plug.m_dir} plug setting! '{prefab.name}'");
                 var go = UnityEngine.Object.Instantiate(prefab, plug.transform.position, plug.transform.rotation);
                 go.transform.SetParent(plug.transform, true);
                 LG_Factory.FindAndBuildSelectorsAndSpawners(go, __instance.m_rnd.Random.NextSubSeed());
@@ -113,7 +111,7 @@ namespace LGTuner.Inject
 
         private static bool TryGetPlugPrefab(string prefabPath, [MaybeNullWhen(false)] out GameObject prefab)
         {
-            if (string.IsNullOrEmpty(prefabPath))
+            if (prefabPath.IsNullOrWhiteSpace())
             {
                 prefab = null;
                 return false;
