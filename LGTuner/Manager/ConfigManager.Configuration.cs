@@ -89,7 +89,6 @@ namespace LGTuner.Manager
                 return;
 
             /* --- get current layout datablocks --- */
-            var customAssets = new HashSet<string>();
             var layoutIDs = new HashSet<uint> { expData.LevelLayoutData, expData.SecondaryLayout, expData.ThirdLayout };
             foreach (var dimExpData in expData.DimensionDatas)
             {
@@ -98,6 +97,7 @@ namespace LGTuner.Manager
             }
 
             /* --- read current configs --- */
+            var customAssets = new HashSet<string>();
             foreach (uint id in layoutIDs)
             {
                 if (!TryGetConfig(id, out var config))
