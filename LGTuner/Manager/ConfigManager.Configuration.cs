@@ -104,6 +104,7 @@ namespace LGTuner.Manager
                     continue;
 
                 customAssets.UnionWith(config.ZoneOverrides.SelectMany(z => z.Geomorphs).Select(g => g.Geomorph));
+                customAssets.UnionWith(config.ZoneOverrides.SelectMany(z => z.Plugs));
                 foreach (var t in config.TileOverrides)
                 {
                     customAssets.Add(t.Geomorph);
