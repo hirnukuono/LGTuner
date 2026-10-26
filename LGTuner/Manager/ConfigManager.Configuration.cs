@@ -44,8 +44,8 @@ namespace LGTuner.Manager
 
         public const string BCGF_GUID = "com.hirnukuono.BorkenCellGeoFix";
         public static bool BCGF_IsLoaded { get; private set; } = false;
-        public static event Action? OnReloaded;
         private static string[] s_levelAssetBundles = Array.Empty<string>();        
+        private static readonly HashSet<string> s_levelAssets = new(StringComparer.OrdinalIgnoreCase);
         private static readonly HashSet<string> s_levelAssetsToLoad = new(StringComparer.OrdinalIgnoreCase);
 
         internal static void Prepare(ConfigFile cfg)
@@ -56,15 +56,11 @@ namespace LGTuner.Manager
                 BCGF_IsLoaded = true;
             }
 
-            cfg.ConfigReloaded += (o, args) =>
-            {
-                s_levelAssetBundles = General.LevelAssetsToLoad.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                OnReloaded?.Invoke();
-            };
+            cfg.ConfigReloaded += (o, args) => OnAssetBundlesLoaded();
             ConfigBinder.BindToType(cfg, typeof(ConfigManager));
             SafeFileSystemWatcher.Create(cfg);
-            s_levelAssetBundles = General.LevelAssetsToLoad.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+            AssetAPI.OnAssetBundlesLoaded += OnAssetBundlesLoaded;
             LevelAPI.OnLevelDataUpdated += OnLevelDataUpdated;
             AssetAPI.OnLoadLevelAssets += args =>
             {
@@ -73,6 +69,17 @@ namespace LGTuner.Manager
                     args.EnqueueAssetToLoad(asset);
                 }
             };
+        }
+
+        private static void OnAssetBundlesLoaded()
+        {
+            s_levelAssetBundles = General.LevelAssetsToLoad.Value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            s_levelAssets.Clear();
+            foreach ((string bundle, var bundleRef) in AssetAPI.AllCustomBundles.KeyValues)
+            {
+                if (s_levelAssetBundles.Any(f => bundle.Contains(f, StringComparison.OrdinalIgnoreCase)))
+                    s_levelAssets.UnionWith(bundleRef.Assets.AssetNames);
+            }
         }
 
         private static void OnLevelDataUpdated(ActiveExpedition activeExp, ExpeditionInTierData expData)
@@ -91,7 +98,7 @@ namespace LGTuner.Manager
             }
 
             /* --- read current configs --- */
-            foreach (var id in layoutIDs)
+            foreach (uint id in layoutIDs)
             {
                 if (!TryGetConfig(id, out var config))
                     continue;
@@ -108,9 +115,9 @@ namespace LGTuner.Manager
             }
 
             /* --- add to assets to load --- */
-            foreach (var prefab in customAssets)
+            foreach (string prefab in customAssets)
             {
-                if (!prefab.IsNullOrWhiteSpace() && s_levelAssetBundles.Any(f => prefab.Contains(f, StringComparison.OrdinalIgnoreCase)))
+                if (!prefab.IsNullOrWhiteSpace() && s_levelAssets.Any(f => prefab.Equals(f, StringComparison.OrdinalIgnoreCase)))
                     s_levelAssetsToLoad.Add(prefab);                
             }
         }

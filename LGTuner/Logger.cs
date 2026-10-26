@@ -6,18 +6,7 @@ namespace LGTuner
 {
     internal static class Logger
     {
-        internal static ManualLogSource MLS = null!;
-
-        internal static void Setup(ManualLogSource log = null!)
-        {
-            if (log != null)
-            {
-                MLS = log;
-                return;
-            }            
-            MLS = new("LGTuner");
-            BepInEx.Logging.Logger.Sources.Add(MLS);
-        }
+        public static ManualLogSource MLS { get; internal set; } = null!;
 
         public static void Error(BepInExErrorLogInterpolatedStringHandler handler) => MLS.LogError(handler);
         public static void Error(string str) => MLS.LogError(str);
@@ -36,20 +25,20 @@ namespace LGTuner
             {
                 switch (level)
                 {
-                    case LogLevel.Info:
-                        Info(str);
-                        return;
-                    case LogLevel.Debug:
-                        Debug(str);
-                        return;
-                    case LogLevel.Message:
-                        Message(str);
-                        return;
                     case LogLevel.Error:
                         Error(str);
                         return;
                     case LogLevel.Warning:
                         Warn(str);
+                        return;
+                    case LogLevel.Message:
+                        Message(str);
+                        return;
+                    case LogLevel.Info:
+                        Info(str);
+                        return;
+                    case LogLevel.Debug:
+                        Debug(str);
                         return;
                 }
             }

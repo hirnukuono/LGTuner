@@ -17,7 +17,7 @@ namespace LGTuner
 
         public override void Load()
         {
-            Logger.Setup(Log);
+            Logger.MLS = Log;
             ConfigManager.Prepare(Config);
             new Harmony("LGTuner").PatchAll();
             ConfigManager.Init();
