@@ -161,20 +161,20 @@ namespace LGTuner.Inject
                 return;
 
             Logger.Info($" - addcustomgeomorphareas for {__instance.m_zone.NavInfo.ToString()}");
-            Dictionary<LG_Area, float> listdict = new();
-            foreach (var c in __instance.m_zone.m_areas)
+            Dictionary<LG_Area, float> scoredAreas = new();
+            foreach (var area in __instance.m_zone.m_areas)
             {
-                float score = 1000;
-                if (c.m_zone.ID == 0 && c == c.m_zone.m_areas[0]) 
-                    score = 2000;
-                if (c == c.m_zone.m_sourceExpander.m_linksTo) 
-                    score = 1500;
-                listdict.Add(c, score - Vector3.Distance(c.Position, __instance.m_zone.m_sourceExpander.m_linksFrom.Position));
+                float score = 1000f;
+                if (area.m_zone.ID == 0 && area.GetInstanceID() == area.m_zone.m_areas[0].GetInstanceID()) 
+                    score = 2000f;
+                if (area.GetInstanceID() == area.m_zone.m_sourceExpander.m_linksTo.GetInstanceID()) 
+                    score = 1500f;
+                scoredAreas.Add(area, score - Vector3.Distance(area.Position, __instance.m_zone.m_sourceExpander.m_linksFrom.Position));
             }
 
-            var finalList = listdict.OrderByDescending(listdict => listdict.Value);
+            var sortedAreas = scoredAreas.OrderByDescending(scoredAreas => scoredAreas.Value);
             __instance.m_zone.m_areas.Clear();
-            foreach (var kvp in finalList)
+            foreach (var kvp in sortedAreas)
             {
                 Logger.Verbose($" - addcustomgeomorphareas scoredict {kvp.Key.name} {kvp.Value}");
                 if (!__instance.m_zone.m_areas.Contains(kvp.Key)) 

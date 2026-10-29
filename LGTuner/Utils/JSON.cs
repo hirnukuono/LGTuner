@@ -1,16 +1,17 @@
 ﻿using AmorLib.Dependencies;
 using AmorLib.Utils;
+using LGTuner.Configs;
 using System.Text.Json;
 
 namespace LGTuner.Utils
 {
     internal static class JSON
     {
-        private static readonly JsonSerializerOptions _setting = JsonSerializerUtil.CreateDefaultSettings(true, PartialData_Wrapper.IsLoaded, false);
+        private static readonly JsonSerializerOptions _setting = JsonSerializerUtil.CreateDefaultSettings(false, PartialData_Wrapper.IsLoaded, false);
 
         static JSON()
         {
-            
+            _setting.Converters.Add(new ListableConverter<LayoutConfig>());
         }
 
         public static T Deserialize<T>(string json)

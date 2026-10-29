@@ -22,12 +22,13 @@ namespace LGTuner.Inject
                 x = (uint)Builder.LayerBuildDatas[0].m_zoneBuildDatas[0].SubSeed;
             }
             XXHashSequence xXHashSequence = new(__instance.m_rnd.Seed.SubSeed(x));            
-            if (!ConfigManager.TryGetConfig(RundownManager.ActiveExpedition.LevelLayoutData, out var config)) 
+            if (!ConfigManager.TryGetConfig(RundownManager.ActiveExpedition.LevelLayoutData, out var config) || config.TileOverrides.Length == 0)
                 return true;
-            else if (config.TileOverrides.Length == 0 || config.TileOverrides[0].X != 0 || config.TileOverrides[0].Z != 0 || config.TileOverrides[0].Geomorph.IsNullOrWhiteSpace())
+            var firstTileOverride = config.TileOverrides.OrderBy(t => t.X).ThenBy(t => t.Z).First();
+            if (firstTileOverride.X != 0 || firstTileOverride.Z != 0 || firstTileOverride.Geomorph.IsNullOrWhiteSpace())
                 return true;
             
-            var go = AssetAPI.GetLoadedAsset<GameObject>(config.TileOverrides[0].Geomorph);
+            var go = AssetAPI.GetLoadedAsset<GameObject>(firstTileOverride.Geomorph);
             if (go == null)
             {
                 Logger.Error("LGTuner failed to override elevator!");

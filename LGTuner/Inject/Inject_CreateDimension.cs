@@ -1,5 +1,6 @@
 ﻿using AIGraph;
 using AmorLib.Utils;
+using BepInEx;
 using GameData;
 using GTFO.API;
 using HarmonyLib;
@@ -137,7 +138,7 @@ namespace LGTuner.Inject
             gridSize = 40;
             if (dimensionData.IsStaticDimension) 
                 return true;
-            if (!DataBlockUtil.TryGetBlock<LevelLayoutDataBlock>(dimensionData.LevelLayoutData, out var layoutBlock) || !ConfigManager.TryGetConfig(layoutBlock.persistentID, out var dimLayer) || dimLayer.TileOverrides.Length == 0) 
+            if (!DataBlockUtil.TryGetBlock<LevelLayoutDataBlock>(dimensionData.LevelLayoutData, out var layoutBlock) || !ConfigManager.TryGetConfig(layoutBlock.persistentID, out var config) || config.TileOverrides.Length == 0) 
                 return true;
 
             Logger.Debug($"in createdim prefix gridsize {gridSize} ..");
@@ -152,10 +153,11 @@ namespace LGTuner.Inject
             Dimension dimension = new(grid, dimensionIndex, count, dimensionData, position, arenaDimension);
             DebugLog.LogPrefix(__instance, $"Created Dimension (Index: {dimensionIndex}, gridSize: {gridSize}, cellSize: {cellSize}).");
             var customGeomorph = dimension.ResourceData.GetCustomGeomorph(dimensionData.DimensionGeomorph);
+            var firstTileOverride = config.TileOverrides.OrderBy(t => t.X).ThenBy(t => t.Z).First();
 
-            if (dimLayer.TileOverrides[0].X == 0 && dimLayer.TileOverrides[0].Z == 0 && !string.IsNullOrEmpty(dimLayer.TileOverrides[0].Geomorph))
+            if (firstTileOverride.X == 0 && firstTileOverride.Z == 0 && !firstTileOverride.Geomorph.IsNullOrWhiteSpace())
             {
-                customGeomorph = AssetAPI.GetLoadedAsset<GameObject>(dimLayer.TileOverrides[0].Geomorph);
+                customGeomorph = AssetAPI.GetLoadedAsset<GameObject>(firstTileOverride.Geomorph);
                 Logger.Info($" - dim {dimensionIndex} elevator overriden! {customGeomorph.name}");
             }
             if (customGeomorph == null)

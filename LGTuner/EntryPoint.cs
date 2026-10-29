@@ -25,4 +25,3 @@ namespace LGTuner
         }
     }
 }
-// todo - custom converter for layout config to read as json array or object

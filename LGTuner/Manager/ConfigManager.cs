@@ -78,8 +78,8 @@ namespace LGTuner.Manager
             }
             layoutSet.Clear();
 
-            var data = JSON.Deserialize<LayoutConfig>(content);
-            if (data != null && data.LevelLayoutID != 0u)
+            var datas = JSON.Deserialize<List<LayoutConfig>>(content) ?? new();
+            foreach (var data in datas.Where(d => d != null && d.LevelLayoutID != 0u))
             {
                 layoutSet.Add(data.LevelLayoutID);
                 _layouts[data.LevelLayoutID] = data;
@@ -106,7 +106,7 @@ namespace LGTuner.Manager
         {
            (string oldPath, string path) = (e.OldFullPath, e.FullPath);
             Logger.Warn($"LiveEdit file renamed: {path}");
-            if (_lookups.TryGetValue(oldPath, out var idSet))
+            if (_lookups.ContainsKey(oldPath))
             {
                 _lookups[path] = _lookups[oldPath];
                 _lookups.Remove(oldPath);
