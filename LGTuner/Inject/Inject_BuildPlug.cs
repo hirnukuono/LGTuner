@@ -25,7 +25,7 @@ namespace LGTuner.Inject
                 return;
             if (overrideData.ZoneData?.OverridePlugs == true && TryGetPlugPrefab(overrideData.ZoneData.GetNextPlug(), out var newPrefab))
             {
-                Logger.Info($" - Prefab replaced by zone OverridePlugs! '{newPrefab.name}'");
+                Logger.Info($" - Prefab replaced by ZoneData.OverridePlugs! '{newPrefab.name}'");
                 prefab = newPrefab;
             }
 
