@@ -22,7 +22,7 @@ namespace LGTuner
             ConfigManager.Prepare(Config);
             new Harmony("LGTuner").PatchAll();
             ConfigManager.Init();
-            Logger.Info("LGTuner is done loading!");
+            Logger.Message("LGTuner is done loading!");
         }
     }
 }

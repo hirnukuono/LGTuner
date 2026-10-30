@@ -15,7 +15,7 @@ namespace LGTuner
         public static void Message(BepInExMessageLogInterpolatedStringHandler handler) => MLS.LogMessage(handler);
         public static void Message(string str) => MLS.LogMessage(str);
         public static void Info(BepInExInfoLogInterpolatedStringHandler handler) => MLS.LogInfo(handler);
-        public static void Info(string str) => MLS.LogMessage(str);
+        public static void Info(string str) => MLS.LogInfo(str);
         public static void Debug(BepInExDebugLogInterpolatedStringHandler handler) => MLS.LogDebug(handler);
         public static void Debug(string str) => MLS.LogDebug(str);
         
