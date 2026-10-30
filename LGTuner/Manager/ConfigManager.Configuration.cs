@@ -25,11 +25,11 @@ namespace LGTuner.Manager
             public static ConfigEntry<bool> VerboseEnabled { get; private set; }
 
             [ConfigEntry("Toggle legacy geo fixes", true)]
-            [Description("If enabled, apply geomorph fixes (see README for more info). Force disabled if BorkenCellGeoFix is loaded")]
+            [Description("If enabled, apply geomorph fixes (see README for more info). Is internally disabled if BorkenCellGeoFix is also loaded")]
             public static ConfigEntry<bool> LegacyGeoFixesEnabled { get; private set; }
 
             [ConfigEntry("Precache custom level assets", true)]
-            [Description("Map level assets used for each level in LGTuner overrides. This should help alleviate the game hanging when loading custom assets")]
+            [Description("Map custom level assets used in LGTuner overrides. This should help alleviate the game hanging when loading assets")]
             public static ConfigEntry<bool> PrecacheLevelAssets { get; private set; }
 
             [ConfigEntry("AssetBundle lookup", BundleLookup)]
@@ -39,7 +39,7 @@ namespace LGTuner.Manager
             [ConfigEntry("Version", ConfigurationVersion)]
             public static ConfigEntry<int> Version { get; private set; }
         }
-#pragma warning restore CS8618
+        #pragma warning restore CS8618
         #endregion
 
         public const string BCGF_GUID = "com.hirnukuono.BorkenCellGeoFix";
@@ -56,7 +56,11 @@ namespace LGTuner.Manager
                 BCGF_IsLoaded = true;
             }
 
-            cfg.ConfigReloaded += (o, args) => OnAssetBundlesLoaded();
+            cfg.ConfigReloaded += (o, args) =>
+            {
+                Logger.Warn("Config file reloaded: " + cfg.ConfigFilePath);
+                OnAssetBundlesLoaded();
+            };
             ConfigBinder.BindToType(cfg, typeof(ConfigManager));
             SafeFileSystemWatcher.Create(cfg);
 
