@@ -6,7 +6,7 @@ using LGTuner.Manager;
 
 namespace LGTuner
 {
-    [BepInPlugin(MODNAME, MODNAME, "1.3.0")]
+    [BepInPlugin(MODNAME, MODNAME, "1.3.1")]
     [BepInProcess("GTFO.exe")]
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("Amor.AmorLib", BepInDependency.DependencyFlags.HardDependency)]
