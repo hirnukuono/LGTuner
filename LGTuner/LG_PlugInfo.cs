@@ -56,7 +56,7 @@ namespace LGTuner
             }
             else
             {
-                Logger.Info($"You are rotating {Count} side Geomorph, this could lead to level gen crash!");
+                Logger.Info($"You are rotating {Count} side Geomorph, this could lead to level gen crash");
                 rotation = GetRotationOfDirection(newDirection);
                 return true;
             }

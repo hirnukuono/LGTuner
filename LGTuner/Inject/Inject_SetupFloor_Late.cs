@@ -79,10 +79,38 @@ namespace LGTuner.Inject
 
             if (AssetAPI.AllCustomAssets.TryGet("Assets/Custom Geo's/Mining exit/Mining_exit_V1.prefab", out var assetRef) && assetRef.IsLoaded)
             {
+                var positionArr = new Vector3[] // since modded geo may not always be unloaded, we need to use absolute positions instead of relative offset
+                {
+                    new(-3.5f,     -4.119f, -21.95f),
+                    new(-3.5f,     -4.119f, -17.05f),
+                    new( 3.46f,    -4.119f, -21.95f),
+                    new( 3.46f,    -4.119f, -17f),
+                    new( 3.5f,     -4.119f, -21.95f),
+                    new( 0.20444f, -4.119f, -23.95f),
+                    new(-3.5f,     -4.119f, -11.1f),
+                    new( 3.46f,    -4.119f, -11.07f),
+                    new(-3.5f,     -4.119f, -5.21f),
+                    new( 3.46f,    -4.119f, -5.16f),
+                    new(-8.443f,   -4.119f, -27.37f),
+                    new( 8.45f,    -4.119f, -27.265f),
+                    new(-3.5f,     -4.119f, -21.95f),
+                    new(-3.5f,     -4.119f, -17.05f),
+                    new( 3.46f,    -4.119f, -21.95f),
+                    new( 3.46f,    -4.119f, -17f),
+                    new( 3.5f,     -4.119f, -21.95f),
+                    new( 0.20444f, -4.119f, -23.95f),
+                    new(-3.5f,     -4.205f, -13.11f),
+                    new( 3.46f,    -4.119f, -11.07f),
+                    new(-8.443f,   -4.119f, -27.37f),
+                    new( 8.45f,    -4.119f, -27.265f),
+                    new(-3.5f,     -4.119f, -28.07f),
+                    new( 3.46f,    -4.119f, -28f)
+                };
+                int idx = 0;
                 foreach (var prefabSpawner2 in assetRef.AssetAs<GameObject>().GetComponentsInChildren<LG_PrefabSpawner>())
                 {
                     if (prefabSpawner2.transform.name.Contains("BuildingPart_StorageDivider_Conc_4x4x1_a", StringComparison.OrdinalIgnoreCase))
-                        prefabSpawner2.transform.localPosition -= new Vector3(0f, 0.125f, 0f);                    
+                        prefabSpawner2.transform.localPosition = positionArr[idx++];                
                 }
                 Logger.Debug("navmesh fix on samdb_v1 'Mining_exit_V1' done");
             }
