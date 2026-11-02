@@ -24,8 +24,8 @@ namespace LGTuner.Inject
             XXHashSequence xXHashSequence = new(__instance.m_rnd.Seed.SubSeed(x));            
             if (!ConfigManager.TryGetConfig(RundownManager.ActiveExpedition.LevelLayoutData, out var config) || config.TileOverrides.Length == 0)
                 return true;
-            var firstTileOverride = config.TileOverrides.OrderBy(t => t.X).ThenBy(t => t.Z).First();
-            if (firstTileOverride.X != 0 || firstTileOverride.Z != 0 || firstTileOverride.Geomorph.IsNullOrWhiteSpace())
+            var firstTileOverride = config.TileOverrides.FirstOrDefault(t => t.X == 0 && t.Z == 0);
+            if (firstTileOverride == null || firstTileOverride.Geomorph.IsNullOrWhiteSpace())
                 return true;
             
             var go = AssetAPI.GetLoadedAsset<GameObject>(firstTileOverride.Geomorph);

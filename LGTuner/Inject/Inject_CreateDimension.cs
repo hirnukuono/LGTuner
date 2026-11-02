@@ -153,9 +153,9 @@ namespace LGTuner.Inject
             Dimension dimension = new(grid, dimensionIndex, count, dimensionData, position, arenaDimension);
             DebugLog.LogPrefix(__instance, $"Created Dimension (Index: {dimensionIndex}, gridSize: {gridSize}, cellSize: {cellSize}).");
             var customGeomorph = dimension.ResourceData.GetCustomGeomorph(dimensionData.DimensionGeomorph);
-            var firstTileOverride = config.TileOverrides.OrderBy(t => t.X).ThenBy(t => t.Z).First();
+            var firstTileOverride = config.TileOverrides.FirstOrDefault(t => t.X == 0 && t.Z == 0);
 
-            if (firstTileOverride.X == 0 && firstTileOverride.Z == 0 && !firstTileOverride.Geomorph.IsNullOrWhiteSpace())
+            if (firstTileOverride != null && !firstTileOverride.Geomorph.IsNullOrWhiteSpace())
             {
                 customGeomorph = AssetAPI.GetLoadedAsset<GameObject>(firstTileOverride.Geomorph);
                 Logger.Info($" - dim {dimensionIndex} elevator overriden! {customGeomorph.name}");
